@@ -29,9 +29,18 @@ NDVI_import = np.genfromtxt(infilename, dtype=str, skip_header=1, usecols=range(
 nrows=nrows-1
 ncols=ncols-1
 
+#Create array to store the distance from the breeding ground at each lattice point.
+r_i_array = np.zeros(NDVI_import.shape)
+
 #Define position of breeding ground and initial position of goose
-breeding_position = (0,ncols-1)
-goose_position = (int(random.random()*1000),int(random.random()*1000))
+breeding_position = (279,1147) #(0,ncols-1)
+
+#x = "NA"
+#while x == "NA":
+#    coordinates = (int(random.random()*699),int(random.random()*1000))
+#    x = NDVI_import[coordinates]
+#    goose_position = coordinates
+goose_position = (495,560)
 
 #Also define array to hold Boltzmann factors with same dimensions as data array
 boltzmann_factors = np.zeros(NDVI_import.shape)
@@ -45,10 +54,11 @@ for x in range(0,nrows):
             #Define distance of (x,y) from breeding position - put this into a function?
             r_i_vector = [(breeding_position[0]-x),(breeding_position[1]-y)]
             r_i        = (np.vdot(r_i_vector,r_i_vector))**0.5+0.1
+            r_i_array[x,y] = r_i
             #Define potential at (x,y) from NDVI data and "breeding location gravity"
             #Note that factor of -1 in exponential is included in "potential" value
-            potential = (float(NDVI_import[x,y]) + 0.1/r_i)/1000
-            boltzmann_factors[x][y] = exp(potential)
+            potential = (float(NDVI_import[x,y]) + 10/r_i)/1000
+            boltzmann_factors[x,y] = exp(potential)
 
 #We have now defined the Boltzmann factor array that will be used to determine probabilities as the goose moves through the lattice.
 
@@ -56,7 +66,7 @@ for x in range(0,nrows):
 outfile = open(infilename[0:-4]+'_goose_positions.txt','w')
 
 #Loop over timesteps
-for t in range (0,100000):
+for t in range (0,1000000):
     #Define possible_states array to hold the neighbouring lattice points that a goose can move into. Generally 9, fewer at system edges.
     possible_states = []
     #Identify current neighbouring elements
@@ -89,15 +99,15 @@ for t in range (0,100000):
             pass
 
     #Now that we have updated the goose position, write it to output file
-    output = str(t)+'  '+str(goose_position[0])+'  '+str(goose_position[1])+'\n'
+    output = str(t)+'  '+str(goose_position[0])+'  '+str(goose_position[1])+'  '+str(r_i_array[goose_position[0],goose_position[1]])+'\n'
     outfile.write(output)
 
-print (boltzmann_factors[goose_position[0]-1,goose_position[1]-1],boltzmann_factors[goose_position[0]-1,goose_position[1]],boltzmann_factors[goose_position[0]-1,goose_position[1]+1])
-print (boltzmann_factors[goose_position[0],goose_position[1]-1],boltzmann_factors[goose_position[0],goose_position[1]],boltzmann_factors[goose_position[0],goose_position[1]+1])
-print (boltzmann_factors[goose_position[0]+1,goose_position[1]-1],boltzmann_factors[goose_position[0]+1,goose_position[1]],boltzmann_factors[goose_position[0]+1,goose_position[1]+1])
-print (NDVI_import[goose_position[0]-1,goose_position[1]-1],NDVI_import[goose_position[0]-1,goose_position[1]],NDVI_import[goose_position[0]-1,goose_position[1]+1])
-print (NDVI_import[goose_position[0],goose_position[1]-1],NDVI_import[goose_position[0],goose_position[1]],NDVI_import[goose_position[0],goose_position[1]+1])
-print (NDVI_import[goose_position[0]+1,goose_position[1]-1],NDVI_import[goose_position[0]+1,goose_position[1]],NDVI_import[goose_position[0]+1,goose_position[1]+1])
+#print (boltzmann_factors[goose_position[0]-1,goose_position[1]-1],boltzmann_factors[goose_position[0]-1,goose_position[1]],boltzmann_factors[goose_position[0]-1,goose_position[1]+1])
+#print (boltzmann_factors[goose_position[0],goose_position[1]-1],boltzmann_factors[goose_position[0],goose_position[1]],boltzmann_factors[goose_position[0],goose_position[1]+1])
+#print (boltzmann_factors[goose_position[0]+1,goose_position[1]-1],boltzmann_factors[goose_position[0]+1,goose_position[1]],boltzmann_factors[goose_position[0]+1,goose_position[1]+1])
+#print (NDVI_import[goose_position[0]-1,goose_position[1]-1],NDVI_import[goose_position[0]-1,goose_position[1]],NDVI_import[goose_position[0]-1,goose_position[1]+1])
+#print (NDVI_import[goose_position[0],goose_position[1]-1],NDVI_import[goose_position[0],goose_position[1]],NDVI_import[goose_position[0],goose_position[1]+1])
+#print (NDVI_import[goose_position[0]+1,goose_position[1]-1],NDVI_import[goose_position[0]+1,goose_position[1]],NDVI_import[goose_position[0]+1,goose_position[1]+1])
 #final_outfile = open('finalgooseposition.txt','w')
 #final_outfile.write(str(goose_position[0])+'  '+str(goose_position[1]))
 
