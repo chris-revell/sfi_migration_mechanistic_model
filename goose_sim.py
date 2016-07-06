@@ -3,6 +3,7 @@ from sys import argv
 import numpy as np
 import random
 from math import exp
+import matplotlib.pyplot as plt
 
 infilename = argv[1]
 
@@ -28,6 +29,9 @@ NDVI_import = np.genfromtxt(infilename, dtype=str, skip_header=1, usecols=range(
 #Convert to number of columns and rows in array.
 nrows=nrows-1
 ncols=ncols-1
+
+plt.axis([0, ncols, nrows, 0])
+plt.ion()
 
 #Create array to store the distance from the breeding ground at each lattice point.
 r_i_array = np.zeros(NDVI_import.shape)
@@ -57,7 +61,7 @@ for x in range(0,nrows):
             r_i_array[x,y] = r_i
             #Define potential at (x,y) from NDVI data and "breeding location gravity"
             #Note that factor of -1 in exponential is included in "potential" value
-            potential = (float(NDVI_import[x,y]) + 10/r_i)/1000
+            potential = (float(NDVI_import[x,y])/100 + 10/r_i)/1000
             boltzmann_factors[x,y] = exp(potential)
 
 #We have now defined the Boltzmann factor array that will be used to determine probabilities as the goose moves through the lattice.
@@ -101,6 +105,12 @@ for t in range (0,1000000):
     #Now that we have updated the goose position, write it to output file
     output = str(t)+'  '+str(goose_position[0])+'  '+str(goose_position[1])+'  '+str(r_i_array[goose_position[0],goose_position[1]])+'\n'
     outfile.write(output)
+    if t%1000 == 0:
+        plt.scatter(goose_position[0], goose_position[1])
+        plt.pause(0.)
+
+#while True:
+#    plt.pause(0.000005)
 
 #print (boltzmann_factors[goose_position[0]-1,goose_position[1]-1],boltzmann_factors[goose_position[0]-1,goose_position[1]],boltzmann_factors[goose_position[0]-1,goose_position[1]+1])
 #print (boltzmann_factors[goose_position[0],goose_position[1]-1],boltzmann_factors[goose_position[0],goose_position[1]],boltzmann_factors[goose_position[0],goose_position[1]+1])
