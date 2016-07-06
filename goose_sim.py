@@ -30,8 +30,9 @@ NDVI_import = np.genfromtxt(infilename, dtype=str, skip_header=1, usecols=range(
 nrows=nrows-1
 ncols=ncols-1
 
-plt.axis([0, ncols, nrows, 0])
-plt.ion()
+#Set up plotting axes
+#plt.axis([0, ncols, nrows, 0])
+#plt.ion()
 
 #Create array to store the distance from the breeding ground at each lattice point.
 r_i_array = np.zeros(NDVI_import.shape)
@@ -39,6 +40,7 @@ r_i_array = np.zeros(NDVI_import.shape)
 #Define position of breeding ground and initial position of goose
 breeding_position = (279,1147) #(0,ncols-1)
 
+#Set goose position randomly, excluding lattice points with value NA, or from data
 #x = "NA"
 #while x == "NA":
 #    coordinates = (int(random.random()*699),int(random.random()*1000))
@@ -105,9 +107,9 @@ for t in range (0,1000000):
     #Now that we have updated the goose position, write it to output file
     output = str(t)+'  '+str(goose_position[0])+'  '+str(goose_position[1])+'  '+str(r_i_array[goose_position[0],goose_position[1]])+'\n'
     outfile.write(output)
-    if t%1000 == 0:
-        plt.scatter(goose_position[0], goose_position[1])
-        plt.pause(0.)
+#    if t%1000 == 0:
+#        plt.scatter(goose_position[0], goose_position[1])
+#        plt.pause(0.05)
 
 #while True:
 #    plt.pause(0.000005)
