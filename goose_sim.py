@@ -5,9 +5,17 @@ import random
 from math import exp
 import matplotlib.pyplot as plt
 
+#Set system parameters
+t_max = 100000  # Total number of timesteps
+A     = 10000   # Prefactor for breeding site gravitational attraction
+kT    = 1000    # Measure of goose temperature or "restlessness"
+
+#Folder path for datafile given at command line
 infilename = argv[1]
 
-#File path for datafile given at command line
+#Write parameters to data file
+parameterfile = open(infilename[0:-4]+'_parameters.txt','w')
+
 #Use numpy.genfromtxt to import matrix in .txt file into array, skipping first row and column
 #Data is imported in string format and contains "NA" values for sea areas.
 #Also in data file, greener points have higher NDVI values.
@@ -48,6 +56,12 @@ breeding_position = (279,1147) #(0,ncols-1)
 #    goose_position = coordinates
 goose_position = (495,560)
 
+#Write initial conditions to file
+winterbreedingpositionfile = open('NDVI_data/winterbreedingposition.txt','w')
+winterbreedingpositionfile.write(str(goose_position[0])+'  '+str(goose_position[1])+'\n')
+winterbreedingpositionfile.write(str(breeding_position[0])+'  '+str(breeding_position[1]))
+winterbreedingpositionfile.close()
+
 #Also define array to hold Boltzmann factors with same dimensions as data array
 boltzmann_factors = np.zeros(NDVI_import.shape)
 #Calculate values for all elements of boltzmann factor array.
@@ -63,7 +77,7 @@ for x in range(0,nrows):
             r_i_array[x,y] = r_i
             #Define potential at (x,y) from NDVI data and "breeding location gravity"
             #Note that factor of -1 in exponential is included in "potential" value
-            potential = (float(NDVI_import[x,y])/100 + 10/r_i)/1000
+            potential = (float(NDVI_import[x,y]) + A/r_i)/kT
             boltzmann_factors[x,y] = exp(potential)
 
 #We have now defined the Boltzmann factor array that will be used to determine probabilities as the goose moves through the lattice.
@@ -72,7 +86,7 @@ for x in range(0,nrows):
 outfile = open(infilename[0:-4]+'_goose_positions.txt','w')
 
 #Loop over timesteps
-for t in range (0,1000000):
+for t in range (0,t_max):
     #Define possible_states array to hold the neighbouring lattice points that a goose can move into. Generally 9, fewer at system edges.
     possible_states = []
     #Identify current neighbouring elements
@@ -113,6 +127,9 @@ for t in range (0,1000000):
 
 #while True:
 #    plt.pause(0.000005)
+
+
+#Stuff for debugging below
 
 #print (boltzmann_factors[goose_position[0]-1,goose_position[1]-1],boltzmann_factors[goose_position[0]-1,goose_position[1]],boltzmann_factors[goose_position[0]-1,goose_position[1]+1])
 #print (boltzmann_factors[goose_position[0],goose_position[1]-1],boltzmann_factors[goose_position[0],goose_position[1]],boltzmann_factors[goose_position[0],goose_position[1]+1])
