@@ -87,6 +87,12 @@ outfile = open(infilename[0:-4]+'_goose_positions.txt','w')
 
 #Loop over timesteps
 for t in range (0,t_max):
+
+    if int(t%(update_interval)) == 0:
+        importdata()
+
+
+
     #Define possible_states array to hold the neighbouring lattice points that a goose can move into. Generally 9, fewer at system edges.
     possible_states = []
     #Identify current neighbouring elements
@@ -125,7 +131,7 @@ for t in range (0,t_max):
 
 #Define subroutine for importing data and updating boltzmann_factors array
 #Still need to have imported NDVI data and defined the size of the boltzmann_factors array before the first use of this subroutine.
-#ie this subroutine is intended for updating arrays, not creating them. 
+#ie this subroutine is intended for updating arrays, not creating them.
 def importdata(filename):
     global NDVI_import
     global boltzmann_factors
