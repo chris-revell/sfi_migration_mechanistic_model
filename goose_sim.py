@@ -6,7 +6,7 @@ from math import exp
 import matplotlib.pyplot as plt
 
 #Set system parameters
-t_max = 100000  # Total number of timesteps
+t_max = 200000  # Total number of timesteps
 A     = 10000   # Prefactor for breeding site gravitational attraction
 kT    = 1000    # Measure of goose temperature or "restlessness"
 
@@ -15,6 +15,9 @@ infilename = argv[1]
 
 #Write parameters to data file
 parameterfile = open(infilename[0:-4]+'_parameters.txt','w')
+
+#List of months to import NDVI data for
+datafiles = ["Apr_1.txt", "Apr_2", "May_1.txt", "May_2.txt", "Jun_1.txt", "Jun_2.txt"]
 
 #Use numpy.genfromtxt to import matrix in .txt file into array, skipping first row and column
 #Data is imported in string format and contains "NA" values for sea areas.
@@ -185,3 +188,9 @@ def importdata(filename):
 #np.savetxt(outfile3,boltzmann_factors)
 #outfile.close()
 #print(ncols,nrows)
+
+outfile4 = open('r_i_array.txt','w+b')
+np.savetxt(outfile4,r_i_array)
+
+def importdata(importfilename):
+     
