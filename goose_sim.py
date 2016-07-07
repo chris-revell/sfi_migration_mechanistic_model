@@ -121,12 +121,45 @@ for t in range (0,t_max):
     #Now that we have updated the goose position, write it to output file
     output = str(t)+'  '+str(goose_position[0])+'  '+str(goose_position[1])+'  '+str(r_i_array[goose_position[0],goose_position[1]])+'\n'
     outfile.write(output)
+
+
+#Define subroutine for importing data and updating boltzmann_factors array
+#Still need to have imported NDVI data and defined the size of the boltzmann_factors array before the first use of this subroutine.
+#ie this subroutine is intended for updating arrays, not creating them. 
+def importdata(filename):
+    global NDVI_import
+    global boltzmann_factors
+    NDVI_import = np.genfromtxt(filename, dtype=str, skip_header=1, usecols=range(1,ncols), delimiter=' ')
+    for x in range(0,nrows):
+        for y in range(0,ncols):
+            if NDVI_import[x,y] == "NA":
+                boltzmann_factors[x][y] = 0
+            else:
+                #Define potential at (x,y) from NDVI data and "breeding location gravity"
+                #Note that factor of -1 in exponential is included in "potential" value
+                potential = (float(NDVI_import[x,y]) + A/r_i_array[x,y])/kT
+                boltzmann_factors[x,y] = exp(potential)
+
+
+
+
+
+
+
+
+#For matplotlib
 #    if t%1000 == 0:
 #        plt.scatter(goose_position[0], goose_position[1])
 #        plt.pause(0.05)
 
 #while True:
 #    plt.pause(0.000005)
+
+
+
+
+
+
 
 
 #Stuff for debugging below
