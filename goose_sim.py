@@ -4,31 +4,38 @@ import numpy as np
 import random
 from math import exp
 import matplotlib.pyplot as plt
+from os import listdir
+from os.path import isfile, join
 
 #Folder path for datafile given at command line
 folderpath = argv[1]
 
 #Set system parameters
-t_max = 200000  # Total number of timesteps
-A     = 10000   # Prefactor for breeding site gravitational attraction
+t_max = 50000  # Total number of timesteps
+A     = 40000   # Prefactor for breeding site gravitational attraction
 kT    = 1000    # Measure of goose temperature or "restlessness"
 #Define position of breeding ground and initial position of goose
 breeding_position = (279,1147)
 goose_position    = (495,560)
 
+#From folder path proveded at command line, find list of files to import NDVI data from.
+#Each file corresponds to half a month. "isfile" checks that we find only files, not directories.
+#f[-1]=='t' excludes anything but .txt files (specifically to exclude .ds_store file on Mac)
+#Note that list will be ordered alphabetically, so alphabetical order of filenames must match temporal order of months.
+datafiles = [f for f in listdir(folderpath) if isfile(join(folderpath, f)) and f[-1]=='t'] #["Apr_1.txt", "Apr_2.txt", "May_1.txt", "May_2.txt", "Jun_1.txt", "Jun_2.txt"]
+datafiles.sort()
+print(datafiles)
+
 #Write initial conditions to file
-winterbreedingpositionfile = open('NDVI_data/winterbreedingposition.txt','w')
-winterbreedingpositionfile.write(str(goose_position[0])+'  '+str(goose_position[1])+'\n')
-winterbreedingpositionfile.write(str(breeding_position[0])+'  '+str(breeding_position[1]))
+#Wintering position and breeding position
+winterbreedingpositionfile = open('output_data/winterbreedingposition.txt','w')
+winterbreedingpositionfile.write(str(goose_position[0])+' '+str(goose_position[1])+'\n'+str(breeding_position[0])+' '+str(breeding_position[1]))
 winterbreedingpositionfile.close()
 #Write simulation parameters to data file
-parameterfile = open(folderpath+'/parameters.txt','w')
+parameterfile = open('output_data/parameters.txt','w')
 
 #Open file into which goose position results are printed
-outfile = open(folderpath+'/goose_positions.txt','w')
-
-#List of months to import NDVI data from (extract automatically using system ls call?)
-datafiles = ["Apr_1.txt", "Apr_2.txt", "May_1.txt", "May_2.txt", "Jun_1.txt", "Jun_2.txt"]
+outfile = open('output_data/goose_positions.txt','w')
 
 #Set interval for importing new datafiles
 update_interval = t_max/len(datafiles)
