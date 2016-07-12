@@ -33,6 +33,16 @@ now = datetime.datetime.now()
 run_folder = 'output_data/'+str(now.year)+str(now.month)+str(now.day)+str(now.hour)+str(now.minute)
 mkdir(run_folder)
 
+#Write gnuplot commands for data in this folder to file
+gnuplot_file = open(run_folder+'/gnuplot_commands.gnu','w')
+gnuplot_file.write('unset key\n')
+gnuplot_file.write('set xrange [0:2000]\n')
+gnuplot_file.write('set yrange [700:0]\n')
+gnuplot_file.write('plot "goose_positions.txt" using 3:2 with lines lt rgb "black", "winterbreedingposition.txt" using 2:1 with points pt 3 ps 5\n')
+gnuplot_file.write('set yrange [0:1000]\n')
+gnuplot_file.write('unset xrange\n')
+gnuplot_file.write('plot "goose_positions.txt" using 1:4 with lines\n')
+
 #Write initial conditions to file
 #Wintering position and breeding position
 winterbreedingpositionfile = open(run_folder+'/winterbreedingposition.txt','w')
