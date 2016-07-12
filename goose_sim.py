@@ -6,6 +6,8 @@ from math import exp
 import matplotlib.pyplot as plt
 from os import listdir
 from os.path import isfile, join
+from os import mkdir
+import datetime
 
 #Folder path for datafile given at command line
 folderpath = argv[1]
@@ -26,16 +28,21 @@ datafiles = [f for f in listdir(folderpath) if isfile(join(folderpath, f)) and f
 datafiles.sort()
 print(datafiles)
 
+#Create date and time labelled folder to store the data from this run
+now = datetime.datetime.now()
+run_folder = 'output_data/'+str(now.year)+str(now.month)+str(now.day)+str(now.hour)+str(now.minute)
+mkdir(run_folder)
+
 #Write initial conditions to file
 #Wintering position and breeding position
-winterbreedingpositionfile = open('output_data/winterbreedingposition.txt','w')
+winterbreedingpositionfile = open(run_folder+'/winterbreedingposition.txt','w')
 winterbreedingpositionfile.write(str(goose_position[0])+' '+str(goose_position[1])+'\n'+str(breeding_position[0])+' '+str(breeding_position[1]))
 winterbreedingpositionfile.close()
 #Write simulation parameters to data file
-parameterfile = open('output_data/parameters.txt','w')
+parameterfile = open(run_folder+'/parameters.txt','w')
 
 #Open file into which goose position results are printed
-outfile = open('output_data/goose_positions.txt','w')
+outfile = open(run_folder+'/goose_positions.txt','w')
 
 #Set interval for importing new datafiles
 update_interval = t_max/len(datafiles)
@@ -116,7 +123,7 @@ def importdata(filename):
 
 #Loop over timesteps
 for t in range (0,t_max):
-    
+
     if (t > 0) and (int(t%(update_interval)) == 0):
         filenameatinterval = folderpath+'/'+datafiles.pop(0)
         importdata(filenameatinterval)
