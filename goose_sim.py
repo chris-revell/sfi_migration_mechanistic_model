@@ -39,6 +39,7 @@ outfile = open('output_data/goose_positions.txt','w')
 
 #Set interval for importing new datafiles
 update_interval = t_max/len(datafiles)
+print(update_interval,int(update_interval))
 
 #Use numpy.genfromtxt to import matrix in .txt file into array, skipping first row and column
 #Data is imported in string format and contains "NA" values for sea areas.
@@ -116,7 +117,7 @@ def importdata(filename):
 
 #Loop over timesteps
 for t in range (0,t_max):
-
+    print(t)
     if (t > 0) and (int(t%(update_interval)) == 0):
         filenameatinterval = folderpath+'/'+datafiles.pop(0)
         importdata(filenameatinterval)
