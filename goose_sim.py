@@ -13,7 +13,7 @@ import datetime
 importfolderpath = argv[1]
 
 #Set system parameters
-t_max = 100  # Total number of timesteps
+t_max = 12  # Total number of timesteps
 #t_halfmonth =   # NDVI data comes as one file for every half month, so we need only specify a number of timesteps per half month and provide a finite set of months for a run.
 A     = 40000   # Prefactor for breeding site gravitational attraction
 kT    = 1000    # Measure of goose temperature or "restlessness"
@@ -51,11 +51,13 @@ winterbreedingpositionfile.write(str(goose_position[0])+' '+str(goose_position[1
 winterbreedingpositionfile.close()
 #Write simulation parameters to data file
 parameterfile = open(run_folder+'/parameters.txt','w')
+parameterfile.write("A  "+str(A)+"\nkT  "+str(kT)+"\nt_max  "+str(t_max)+'\nDatafiles:')
+parameterfile.write('  '.join(datafiles))
 
 #Open file into which goose position results are printed
 outfile = open(run_folder+'/goose_positions.txt','w')
 
-#Set interval for importing new datafiles. Note -1 because the system ends once interpolation reaches the state of the final file. 
+#Set interval for importing new datafiles. Note -1 because the system ends once interpolation reaches the state of the final file.
 update_interval = t_max/(len(datafiles)-1)
 
 #Use numpy.genfromtxt to import matrix in .txt file into array, skipping first row and column
@@ -78,6 +80,7 @@ boltzmann_factors = np.zeros((nrows-1,ncols-1))
 r_i_array         = np.zeros((nrows-1,ncols-1))
 NDVI_gradient     = np.empty((nrows-1,ncols-1),dtype=float)
 NDVI_interpolated = np.empty((nrows-1,ncols-1),dtype=str)
+
 #Fill r_i_array with distances from breeding site.
 for x in range(0,nrows-1):
     for y in range(0,ncols-1):
@@ -86,17 +89,21 @@ for x in range(0,nrows-1):
         r_i        = (np.vdot(r_i_vector,r_i_vector))**0.5+0.1
         r_i_array[x,y] = r_i
 
+#Import initial NDVI file
+initialfilename = importfolderpath+'/'+datafiles.pop(0)
+print (initialfilename)
+NDVI_next = np.genfromtxt(initialfilename, dtype=str, skip_header=1, usecols=range(1,ncols), delimiter=' ')
+
 
 #Define functional form of breeding site gravity potential
 def breeding_gravity(radius):
     return (A/radius)
 
-def boltzmann_update(inputarray):
+def boltzmann_update():
     global boltzmann_factors
     global NDVI_interpolated
-    dimensions=inputarray.shape()
-    for x in range(0,dimensions[0]):
-        for y in range(0,dimensions[1]):
+    for x in range(0,nrows-1):
+        for y in range(0,ncols-1):
             if NDVI_interpolated[x,y] == "NA":
                 boltzmann_factors[x][y] = 0
             else:
@@ -146,39 +153,54 @@ def system_update():
     output = str(t)+'  '+str(goose_position[0])+'  '+str(goose_position[1])+'  '+str(r_i_array[goose_position[0],goose_position[1]])+'\n'
     outfile.write(output)
 
-#Import initial NDVI file
-initialfilename = importfolderpath+'/'+datafiles.pop(0)
-print (initialfilename)
-NDVI_next = np.genfromtxt(initialfilename, dtype=str, skip_header=1, usecols=range(1,ncols), delimiter=' ')
-
-#Loop over timesteps
-for t in range (0,t_max):
-
-    #For every import interval, import a new file into NDVI_next and redefine NDVI_current to hold the old values of NDVI_next
-    if (int(t%update_interval) == 0):
-        print(t)
-        NDVI_current = NDVI_next
-        filenameatinterval = importfolderpath+'/'+datafiles.pop(0)
-        NDVI_next = np.genfromtxt(filenameatinterval, dtype=str, skip_header=1, usecols=range(1,ncols), delimiter=' ')
-        NDVI_interpolated = NDVI_current
-        #Can't broadcast over array to calculate gradient due to presence of "NA" values, so need to loop with terms to deal with non numerical components
-        for x in range(0,nrows-1):
-            for y in range(0,ncols-1):
-                if NDVI_current[x,y] == "NA":
-                    NDVI_gradient[x,y] = 0
-                else:
-                    NDVI_gradient[x,y] = (int(NDVI_next[x,y])-int(NDVI_current[x,y]))/update_interval
-        print (t, filenameatinterval)
-
-    system_update()
-
-    #Update the interpolated NDVI array
+#Function to import a new NDVI file and redefine the previous "next" file as the new "current" file.
+#Calculates the gradient array between the two files.
+def importnext():
+    global NDVI_current
+    global NDVI_interpolated
+    global NDVI_gradient
+    global NDVI_next
+    NDVI_current = NDVI_next
+    filenameatinterval = importfolderpath+'/'+datafiles.pop(0)
+    NDVI_next = np.genfromtxt(filenameatinterval, dtype=str, skip_header=1, usecols=range(1,ncols), delimiter=' ')
+    NDVI_interpolated = NDVI_current
+    #Can't broadcast over array to calculate gradient due to presence of "NA" values, so need to loop with terms to deal with non numerical components
     for x in range(0,nrows-1):
         for y in range(0,ncols-1):
+            if NDVI_current[x,y] == "NA":
+                NDVI_gradient[x,y] = 0
+            else:
+                NDVI_gradient[x,y] = (int(NDVI_next[x,y])-int(NDVI_current[x,y]))/update_interval
+    print (t, filenameatinterval)
+
+#Function to interpolate NDVI data between two files
+def interpolate():
+    global NDVI_gradient
+    global NDVI_interpolated
+    #Loop over all elements in array
+    for x in range(0,nrows-1):
+        for y in range(0,ncols-1):
+            #Do nothing for NA values (which correspond to sea)
             if NDVI_interpolated[x,y] == "NA":
                 pass
+            #Use gradient array to update interpolated NDVI array to next state.
             else:
                 newvalue = float(NDVI_interpolated[x,y]) + NDVI_gradient[x,y]
                 NDVI_interpolated[x,y] = str(newvalue)
 
+
+#Loop over timesteps
+for t in range (0,t_max):
+    
+    #For every import interval, import a new file into NDVI_next and redefine NDVI_current to hold the old values of NDVI_next
+    if (int(t%update_interval) == 0):
+        importnext()
+
+    #Update system state according to current interpolated NDVI values and corresponding BOltzmann factors.
+    system_update()
+
+    #Update the interpolated NDVI array
+    interpolate()
+
+    #Update Boltzmann factors according to the new interpolated NDVI values
     boltzmann_update()
