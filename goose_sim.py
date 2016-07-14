@@ -55,8 +55,8 @@ parameterfile = open(run_folder+'/parameters.txt','w')
 #Open file into which goose position results are printed
 outfile = open(run_folder+'/goose_positions.txt','w')
 
-#Set interval for importing new datafiles
-update_interval = t_max/len(datafiles)
+#Set interval for importing new datafiles. Note -1 because the system ends once interpolation reaches the state of the final file. 
+update_interval = t_max/(len(datafiles)-1)
 
 #Use numpy.genfromtxt to import matrix in .txt file into array, skipping first row and column
 #Data is imported in string format and contains "NA" values for sea areas.
@@ -92,17 +92,18 @@ def breeding_gravity(radius):
     return (A/radius)
 
 def boltzmann_update(inputarray):
+    global boltzmann_factors
+    global NDVI_interpolated
     dimensions=inputarray.shape()
     for x in range(0,dimensions[0]):
         for y in range(0,dimensions[1]):
-            if inputarray[x,y] == "NA":
+            if NDVI_interpolated[x,y] == "NA":
                 boltzmann_factors[x][y] = 0
             else:
                 #Define potential at (x,y) from NDVI data and "breeding location gravity"
                 #Note that factor of -1 in exponential is included in "potential" value
-                potential = (float(inputarray[x,y]) + breeding_gravity(r_i_array[x,y]))/kT
+                potential = (float(NDVI_interpolated[x,y]) + breeding_gravity(r_i_array[x,y]))/kT
                 boltzmann_factors[x,y] = exp(potential)
-
 
 #Define subroutine to update the position of the goose
 def system_update():
@@ -179,3 +180,5 @@ for t in range (0,t_max):
             else:
                 newvalue = float(NDVI_interpolated[x,y]) + NDVI_gradient[x,y]
                 NDVI_interpolated[x,y] = str(newvalue)
+
+    boltzmann_update()
