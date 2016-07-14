@@ -10,10 +10,11 @@ from os import mkdir
 import datetime
 
 #Folder path for datafile given at command line
-folderpath = argv[1]
+importfolderpath = argv[1]
 
 #Set system parameters
-t_max = 50000  # Total number of timesteps
+t_max = 12  # Total number of timesteps
+#t_halfmonth =   # NDVI data comes as one file for every half month, so we need only specify a number of timesteps per half month and provide a finite set of months for a run.
 A     = 40000   # Prefactor for breeding site gravitational attraction
 kT    = 1000    # Measure of goose temperature or "restlessness"
 #Define position of breeding ground and initial position of goose
@@ -24,7 +25,7 @@ goose_position    = (495,560)
 #Each file corresponds to half a month. "isfile" checks that we find only files, not directories.
 #f[-1]=='t' excludes anything but .txt files (specifically to exclude .ds_store file on Mac)
 #Note that list will be ordered alphabetically, so alphabetical order of filenames must match temporal order of months.
-datafiles = [f for f in listdir(folderpath) if isfile(join(folderpath, f)) and f[-1]=='t'] #["Apr_1.txt", "Apr_2.txt", "May_1.txt", "May_2.txt", "Jun_1.txt", "Jun_2.txt"]
+datafiles = [f for f in listdir(importfolderpath) if isfile(join(importfolderpath, f)) and f[-1]=='t']
 datafiles.sort()
 print(datafiles)
 
@@ -50,18 +51,20 @@ winterbreedingpositionfile.write(str(goose_position[0])+' '+str(goose_position[1
 winterbreedingpositionfile.close()
 #Write simulation parameters to data file
 parameterfile = open(run_folder+'/parameters.txt','w')
+parameterfile.write("A  "+str(A)+"\nkT  "+str(kT)+"\nt_max  "+str(t_max)+'\nDatafiles:')
+parameterfile.write('  '.join(datafiles))
 
 #Open file into which goose position results are printed
 outfile = open(run_folder+'/goose_positions.txt','w')
 
-#Set interval for importing new datafiles
-update_interval = t_max/len(datafiles)
+#Set interval for importing new datafiles. Note -1 because the system ends once interpolation reaches the state of the final file.
+update_interval = t_max/(len(datafiles)-1)
 
 #Use numpy.genfromtxt to import matrix in .txt file into array, skipping first row and column
 #Data is imported in string format and contains "NA" values for sea areas.
 #Also in data file, greener points have higher NDVI values.
 #We want the potential to be lower at greener areas, so we multiply every value by -1 when using as a potential
-infile = open(folderpath+'/'+datafiles[0],'r')
+infile = open(importfolderpath+'/'+datafiles[0],'r')
 #Number of columns and rows in data file
 nrows=0
 ncols=0
@@ -70,84 +73,59 @@ for line in infile:
     if nrows == 2:
         ncols = len(line.split(' '))
 infile.close()
-#Import data matrix
-NDVI_import = np.genfromtxt(folderpath+'/'+datafiles.pop(0), dtype=str, skip_header=1, usecols=range(1,ncols), delimiter=' ')
 
-#Convert to number of columns and rows in array.
-nrows_array=nrows-1
-ncols_array=ncols-1
+#Use number of columns and rows to define the shape arrays needed later, which must have the same shape as the NDVI data array.
+#These are the boltzmann_factors array, array of distances from breeding ground, NDVI_interpolated array and NDVI_gradient array for interpolating.
+boltzmann_factors = np.zeros((nrows-1,ncols-1))
+r_i_array         = np.zeros((nrows-1,ncols-1))
+NDVI_gradient     = np.empty((nrows-1,ncols-1),dtype=float)
+NDVI_interpolated = np.empty((nrows-1,ncols-1),dtype=str)
 
-#Set up plotting axes
-#plt.axis([0, ncols, nrows, 0])
-#plt.ion()
+#Fill r_i_array with distances from breeding site.
+for x in range(0,nrows-1):
+    for y in range(0,ncols-1):
+        #Define distance of (x,y) from breeding position
+        r_i_vector = [(breeding_position[0]-x),(breeding_position[1]-y)]
+        r_i        = (np.vdot(r_i_vector,r_i_vector))**0.5+0.1
+        r_i_array[x,y] = r_i
 
-#Having imported NDVI data we can create other arrays with the same shape.
-#Create array to store the distance from the breeding ground at each lattice point.
-r_i_array = np.zeros(NDVI_import.shape)
-#Also define array to hold Boltzmann factors with same dimensions as data array
-boltzmann_factors = np.zeros(NDVI_import.shape)
-
-#Calculate values for all elements of boltzmann factor array.
-#If the corresponding element in the data array is "NA", the Boltzmann factor is set to 0.
-for x in range(0,nrows_array):
-    for y in range(0,ncols_array):
-        if NDVI_import[x,y] == "NA":
-            boltzmann_factors[x][y] = 0
-        else:
-            #Define distance of (x,y) from breeding position - put this into a function?
-            r_i_vector = [(breeding_position[0]-x),(breeding_position[1]-y)]
-            r_i        = (np.vdot(r_i_vector,r_i_vector))**0.5+0.1
-            r_i_array[x,y] = r_i
-            #Define potential at (x,y) from NDVI data and "breeding location gravity"
-            #Note that factor of -1 in exponential is included in "potential" value
-            potential = (float(NDVI_import[x,y]) + A/r_i)/kT
-            boltzmann_factors[x,y] = exp(potential)
-#We have now defined the Boltzmann factor array that will be used to determine probabilities as the goose moves through the lattice.
+#Import initial NDVI file
+initialfilename = importfolderpath+'/'+datafiles.pop(0)
+print (initialfilename)
+NDVI_next = np.genfromtxt(initialfilename, dtype=str, skip_header=1, usecols=range(1,ncols), delimiter=' ')
 
 
+#Define functional form of breeding site gravity potential
+def breeding_gravity(radius):
+    return (A/radius)
 
-
-#Define subroutine for importing data and updating boltzmann_factors array
-#Still need to have imported NDVI data and defined the size of the boltzmann_factors array before the first use of this subroutine.
-#ie this subroutine is intended for updating arrays, not creating them.
-def importdata(filename):
-    global NDVI_import
+def boltzmann_update():
     global boltzmann_factors
-    NDVI_import = np.genfromtxt(filename, dtype=str, skip_header=1, usecols=range(1,ncols), delimiter=' ')
-    for x in range(0,nrows_array):
-        for y in range(0,ncols_array):
-            if NDVI_import[x,y] == "NA":
+    global NDVI_interpolated
+    for x in range(0,nrows-1):
+        for y in range(0,ncols-1):
+            if NDVI_interpolated[x,y] == "NA":
                 boltzmann_factors[x][y] = 0
             else:
                 #Define potential at (x,y) from NDVI data and "breeding location gravity"
                 #Note that factor of -1 in exponential is included in "potential" value
-                potential = (float(NDVI_import[x,y]) + A/r_i_array[x,y])/kT
+                potential = (float(NDVI_interpolated[x,y]) + breeding_gravity(r_i_array[x,y]))/kT
                 boltzmann_factors[x,y] = exp(potential)
 
-
-
-
-
-
-
-
-#Loop over timesteps
-for t in range (0,t_max):
-
-    if (t > 0) and (int(t%(update_interval)) == 0):
-        filenameatinterval = folderpath+'/'+datafiles.pop(0)
-        importdata(filenameatinterval)
-        print (t, filenameatinterval)
-
+#Define subroutine to update the position of the goose
+def system_update():
+    global boltzmann_factors
+    global goose_position
+    global outfile
 
     #Define possible_states array to hold the neighbouring lattice points that a goose can move into. Generally 9, fewer at system edges.
     possible_states = []
     #Identify current neighbouring elements
     #Do not include values outside the bounds of the array
     for x in range(-1,2):
-        if 0 <= (goose_position[0]+x) < nrows_array:
+        if 0 <= (goose_position[0]+x) < nrows-1:
             for y in range(-1,2):
-                if 0 <= (goose_position[1]+y) < ncols_array :
+                if 0 <= (goose_position[1]+y) < ncols-1 :
                     possible_states.append((goose_position[0]+x,goose_position[1]+y))
                 else:
                     pass
@@ -175,46 +153,54 @@ for t in range (0,t_max):
     output = str(t)+'  '+str(goose_position[0])+'  '+str(goose_position[1])+'  '+str(r_i_array[goose_position[0],goose_position[1]])+'\n'
     outfile.write(output)
 
+#Function to import a new NDVI file and redefine the previous "next" file as the new "current" file.
+#Calculates the gradient array between the two files.
+def importnext():
+    global NDVI_current
+    global NDVI_interpolated
+    global NDVI_gradient
+    global NDVI_next
+    NDVI_current = NDVI_next
+    filenameatinterval = importfolderpath+'/'+datafiles.pop(0)
+    NDVI_next = np.genfromtxt(filenameatinterval, dtype=str, skip_header=1, usecols=range(1,ncols), delimiter=' ')
+    NDVI_interpolated = NDVI_current
+    #Can't broadcast over array to calculate gradient due to presence of "NA" values, so need to loop with terms to deal with non numerical components
+    for x in range(0,nrows-1):
+        for y in range(0,ncols-1):
+            if NDVI_current[x,y] == "NA":
+                NDVI_gradient[x,y] = 0
+            else:
+                NDVI_gradient[x,y] = (int(NDVI_next[x,y])-int(NDVI_current[x,y]))/update_interval
+    print (t, filenameatinterval)
+
+#Function to interpolate NDVI data between two files
+def interpolate():
+    global NDVI_gradient
+    global NDVI_interpolated
+    #Loop over all elements in array
+    for x in range(0,nrows-1):
+        for y in range(0,ncols-1):
+            #Do nothing for NA values (which correspond to sea)
+            if NDVI_interpolated[x,y] == "NA":
+                pass
+            #Use gradient array to update interpolated NDVI array to next state.
+            else:
+                newvalue = float(NDVI_interpolated[x,y]) + NDVI_gradient[x,y]
+                NDVI_interpolated[x,y] = str(newvalue)
 
 
+#Loop over timesteps
+for t in range (0,t_max):
+    
+    #For every import interval, import a new file into NDVI_next and redefine NDVI_current to hold the old values of NDVI_next
+    if (int(t%update_interval) == 0):
+        importnext()
 
+    #Update system state according to current interpolated NDVI values and corresponding BOltzmann factors.
+    system_update()
 
+    #Update the interpolated NDVI array
+    interpolate()
 
-
-
-
-
-#For matplotlib
-#    if t%1000 == 0:
-#        plt.scatter(goose_position[0], goose_position[1])
-#        plt.pause(0.05)
-
-#while True:
-#    plt.pause(0.000005)
-
-
-
-
-
-
-
-#Stuff for debugging below
-
-#print (boltzmann_factors[goose_position[0]-1,goose_position[1]-1],boltzmann_factors[goose_position[0]-1,goose_position[1]],boltzmann_factors[goose_position[0]-1,goose_position[1]+1])
-#print (boltzmann_factors[goose_position[0],goose_position[1]-1],boltzmann_factors[goose_position[0],goose_position[1]],boltzmann_factors[goose_position[0],goose_position[1]+1])
-#print (boltzmann_factors[goose_position[0]+1,goose_position[1]-1],boltzmann_factors[goose_position[0]+1,goose_position[1]],boltzmann_factors[goose_position[0]+1,goose_position[1]+1])
-#print (NDVI_import[goose_position[0]-1,goose_position[1]-1],NDVI_import[goose_position[0]-1,goose_position[1]],NDVI_import[goose_position[0]-1,goose_position[1]+1])
-#print (NDVI_import[goose_position[0],goose_position[1]-1],NDVI_import[goose_position[0],goose_position[1]],NDVI_import[goose_position[0],goose_position[1]+1])
-#print (NDVI_import[goose_position[0]+1,goose_position[1]-1],NDVI_import[goose_position[0]+1,goose_position[1]],NDVI_import[goose_position[0]+1,goose_position[1]+1])
-#final_outfile = open('finalgooseposition.txt','w')
-#final_outfile.write(str(goose_position[0])+'  '+str(goose_position[1]))
-
-#outfile2 = open('NDVI_import.txt','w+b')
-#outfile3 = open('boltzmann_factors.txt','w+b')
-#np.savetxt(outfile2,NDVI_import)
-#np.savetxt(outfile3,boltzmann_factors)
-#outfile.close()
-#print(ncols,nrows)
-
-#outfile4 = open('r_i_array.txt','w+b')
-#np.savetxt(outfile4,r_i_array)
+    #Update Boltzmann factors according to the new interpolated NDVI values
+    boltzmann_update()
