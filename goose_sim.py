@@ -13,7 +13,7 @@ import datetime
 importfolderpath = argv[1]
 
 #Set system parameters
-t_max = 50000  # Total number of timesteps
+t_max = 100  # Total number of timesteps
 #t_halfmonth =   # NDVI data comes as one file for every half month, so we need only specify a number of timesteps per half month and provide a finite set of months for a run.
 A     = 40000   # Prefactor for breeding site gravitational attraction
 kT    = 1000    # Measure of goose temperature or "restlessness"
@@ -76,7 +76,7 @@ infile.close()
 #These are the boltzmann_factors array, array of distances from breeding ground, NDVI_interpolated array and NDVI_gradient array for interpolating.
 boltzmann_factors = np.zeros((nrows-1,ncols-1))
 r_i_array         = np.zeros((nrows-1,ncols-1))
-NDVI_gradient     = np.empty((nrows-1,ncols-1),dtype=str)
+NDVI_gradient     = np.empty((nrows-1,ncols-1),dtype=float)
 NDVI_interpolated = np.empty((nrows-1,ncols-1),dtype=str)
 #Fill r_i_array with distances from breeding site.
 for x in range(0,nrows-1):
@@ -155,18 +155,18 @@ for t in range (0,t_max):
 
     #For every import interval, import a new file into NDVI_next and redefine NDVI_current to hold the old values of NDVI_next
     if (int(t%update_interval) == 0):
+        print(t)
         NDVI_current = NDVI_next
         filenameatinterval = importfolderpath+'/'+datafiles.pop(0)
         NDVI_next = np.genfromtxt(filenameatinterval, dtype=str, skip_header=1, usecols=range(1,ncols), delimiter=' ')
-        #Can't broadcast over array due to presence of "NA" values, so need to
+        NDVI_interpolated = NDVI_current
+        #Can't broadcast over array to calculate gradient due to presence of "NA" values, so need to loop with terms to deal with non numerical components
         for x in range(0,nrows-1):
             for y in range(0,ncols-1):
                 if NDVI_current[x,y] == "NA":
-                    NDVI_gradient[x,y] = "NA"
-                    NDVI_interpolated[x,y] = "NA"
+                    NDVI_gradient[x,y] = 0
                 else:
-                    NDVI_gradient[x,y] = int(NDVI_next[x,y])-int(NDVI_current[x,y])
-                    NDVI_interpolated[x,y] = NDVI_current[x,y]
+                    NDVI_gradient[x,y] = (int(NDVI_next[x,y])-int(NDVI_current[x,y]))/update_interval
         print (t, filenameatinterval)
 
     system_update()
@@ -177,4 +177,5 @@ for t in range (0,t_max):
             if NDVI_interpolated[x,y] == "NA":
                 pass
             else:
-                NDVI_interpolated[x,y] = int(NDVI_interpolated[x,y]) + int(NDVI_gradient[x,y])
+                newvalue = float(NDVI_interpolated[x,y]) + NDVI_gradient[x,y]
+                NDVI_interpolated[x,y] = str(newvalue)
