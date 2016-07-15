@@ -13,7 +13,7 @@ import datetime
 importfolderpath = argv[1]
 
 #Set system parameters
-t_max = 12  # Total number of timesteps
+t_max = 100  # Total number of timesteps
 #t_halfmonth =   # NDVI data comes as one file for every half month, so we need only specify a number of timesteps per half month and provide a finite set of months for a run.
 A     = 40000   # Prefactor for breeding site gravitational attraction
 kT    = 1000    # Measure of goose temperature or "restlessness"
@@ -101,8 +101,7 @@ def find_possible_states():
     global possible_states
 
     #Start by removing all elements in previous possible states list in case the number of elements in the new list is smaller
-    for element in possible_states:
-        del element
+    del possible_states[:]
 
     #Identify current neighbouring elements
     #Do not include values outside the bounds of the array
@@ -213,7 +212,7 @@ for t in range (0,t_max):
 
     #Find possible states for next run of system
     find_possible_states()
-    print(possible_states)
+
     #Update the interpolated NDVI array
     interpolate(possible_states,t)
 
