@@ -13,7 +13,7 @@ import datetime
 importfolderpath = argv[1]
 
 #Set system parameters
-t_max = 12  # Total number of timesteps
+t_max = 5000  # Total number of timesteps
 #t_halfmonth =   # NDVI data comes as one file for every half month, so we need only specify a number of timesteps per half month and provide a finite set of months for a run.
 A     = 40000   # Prefactor for breeding site gravitational attraction
 kT    = 1000    # Measure of goose temperature or "restlessness"
@@ -191,7 +191,7 @@ def interpolate():
 
 #Loop over timesteps
 for t in range (0,t_max):
-    
+    print(t)
     #For every import interval, import a new file into NDVI_next and redefine NDVI_current to hold the old values of NDVI_next
     if (int(t%update_interval) == 0):
         importnext()

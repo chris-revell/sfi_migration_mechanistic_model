@@ -1,4 +1,0 @@
-A  40000
-kT  1000
-t_max  12
-Datafiles:
