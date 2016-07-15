@@ -156,21 +156,19 @@ def system_update():
 #Function to import a new NDVI file and redefine the previous "next" file as the new "current" file.
 #Calculates the gradient array between the two files.
 def importnext():
-    global NDVI_current
     global NDVI_interpolated
     global NDVI_gradient
     global NDVI_next
-    NDVI_current = NDVI_next
+    NDVI_interpolated = NDVI_next
     filenameatinterval = importfolderpath+'/'+datafiles.pop(0)
     NDVI_next = np.genfromtxt(filenameatinterval, dtype=str, skip_header=1, usecols=range(1,ncols), delimiter=' ')
-    NDVI_interpolated = NDVI_current
     #Can't broadcast over array to calculate gradient due to presence of "NA" values, so need to loop with terms to deal with non numerical components
     for x in range(0,nrows-1):
         for y in range(0,ncols-1):
-            if NDVI_current[x,y] == "NA":
+            if NDVI_interpolated[x,y] == "NA":
                 NDVI_gradient[x,y] = 0
             else:
-                NDVI_gradient[x,y] = (int(NDVI_next[x,y])-int(NDVI_current[x,y]))/update_interval
+                NDVI_gradient[x,y] = (int(NDVI_next[x,y])-int(NDVI_interpolated[x,y]))/update_interval
     print (t, filenameatinterval)
 
 #Function to interpolate NDVI data between two files
@@ -192,7 +190,7 @@ def interpolate():
 #Loop over timesteps
 for t in range (0,t_max):
     print(t)
-    #For every import interval, import a new file into NDVI_next and redefine NDVI_current to hold the old values of NDVI_next
+    #For every import interval, import a new file into NDVI_next and redefine NDVI_interpolated to hold the old values of NDVI_next
     if (int(t%update_interval) == 0):
         importnext()
 
