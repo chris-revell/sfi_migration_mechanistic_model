@@ -21,9 +21,6 @@ kT    = 1000    # Measure of goose temperature or "restlessness"
 breeding_position = (279,1147)
 goose_position    = (495,560)
 
-
-
-
 #From folder path proveded at command line, find list of files to import NDVI data from.
 #Each file corresponds to half a month. "isfile" checks that we find only files, not directories.
 #f[-1]=='t' excludes anything but .txt files (specifically to exclude .ds_store file on Mac)
@@ -206,7 +203,7 @@ def interpolate(possible_states,t):
 find_possible_states()
 #Loop over timesteps
 for t in range (0,t_max):
-    print(t)
+
     #For every import interval, import a new file into NDVI_next and redefine NDVI_interpolated to hold the old values of NDVI_next
     if (int(t%update_interval) == 0):
         importnext(t)
@@ -216,7 +213,7 @@ for t in range (0,t_max):
 
     #Find possible states for next run of system
     find_possible_states()
-
+    print(possible_states)
     #Update the interpolated NDVI array
     interpolate(possible_states,t)
 
