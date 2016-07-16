@@ -14,14 +14,13 @@ importfolderpath = argv[1]
 
 #Set system parameters
 t_max = 1000000  # Total number of timesteps
-#t_halfmonth =   # NDVI data comes as one file for every half month, so we need only specify a number of timesteps per half month and provide a finite set of months for a run.
 A     = int(argv[2])   # Prefactor for breeding site gravitational attraction
-kT    = 1000    # Measure of goose temperature or "restlessness"
+kT    = 2000    # Measure of goose temperature or "restlessness"
 #Define position of breeding ground and initial position of goose
 breeding_position = (279,1147)
 goose_position    = (495,560)
 
-#From folder path proveded at command line, find list of files to import NDVI data from.
+#From folder path provided at command line, find list of files to import NDVI data from.
 #Each file corresponds to half a month. "isfile" checks that we find only files, not directories.
 #f[-1]=='t' excludes anything but .txt files (specifically to exclude .ds_store file on Mac)
 #Note that list will be ordered alphabetically, so alphabetical order of filenames must match temporal order of months.
@@ -31,7 +30,7 @@ print(datafiles)
 
 #Create date and time labelled folder to store the data from this run
 now = datetime.datetime.now()
-run_folder = 'output_data/a='+argv[2]+"_"+str(now.year)+str(now.month)+str(now.day)+str(now.hour)+str(now.minute)
+run_folder = 'output_data/'+str(now.year)+str(now.month)+str(now.day)+str(now.hour)+str(now.minute)
 mkdir(run_folder)
 
 #Write gnuplot commands for data in this folder to file
@@ -79,7 +78,8 @@ infile.close()
 boltzmann_factors = np.zeros((nrows-1,ncols-1))
 r_i_array         = np.zeros((nrows-1,ncols-1))
 NDVI_gradient     = np.empty((nrows-1,ncols-1),dtype=float)
-NDVI_interpolated = np.empty((nrows-1,ncols-1),dtype=str)
+NDVI_interpolated = np.empty((nrows-1,ncols-1),dtype=float)
+NDVI_next         = np.empty((nrows-1,ncols-1),dtype=int)
 time_updated      = np.zeros((nrows-1,ncols-1),dtype=int)
 
 #Fill r_i_array with distances from breeding site.
@@ -93,11 +93,21 @@ for x in range(0,nrows-1):
 #Import initial NDVI file
 initialfilename = importfolderpath+'/'+datafiles.pop(0)
 print (initialfilename)
-NDVI_next = np.genfromtxt(initialfilename, dtype=str, skip_header=1, usecols=range(1,ncols), delimiter=' ')
+NDVI_import = np.genfromtxt(initialfilename, dtype=str, skip_header=1, usecols=range(1,ncols), delimiter=' ')
+#Data imported as strings. Convert to interger format, setting "NA" values to unique intger label 12345
+for x in range(0,nrows-1):
+    for y in range(0,ncols-1):
+        if NDVI_import[x,y] == "NA":
+            NDVI_next[x,y] = 12345
+        else:
+            NDVI_next[x,y] = int(NDVI_import[x,y])
+
+#Define array of possible lattice points that the bird can be in at the next timestep.
+#Generally has 9 components, but can have fewer at the edges of the system.
 possible_states = []
 
+#Define subroutine to find the set of possible lattice points that the bird can be in at the next timestep.
 def find_possible_states():
-    #Define possible_states array to hold the neighbouring lattice points that a goose can move into. Generally 9, fewer at system edges.
     global possible_states
 
     #Start by removing all elements in previous possible states list in case the number of elements in the new list is smaller
@@ -119,11 +129,13 @@ def find_possible_states():
 def breeding_gravity(radius):
     return (A/radius)
 
+#Subroutine to update the bolztmann factors for the possible states in the next timestep after the NDVI values of these states have been interpolated.
 def boltzmann_update(possible_states):
     global boltzmann_factors
     global NDVI_interpolated
     for element in possible_states:
-        if NDVI_interpolated[element] == "NA":
+        if NDVI_interpolated[element] == 12345:
+            #12345 corresponds to "NA" value in original NDVI data. These points correspond to sea. We exclude birds from these points by setting the boltzmann factor to 0.
             boltzmann_factors[x][y] = 0
         else:
             #Define potential at (x,y) from NDVI data and "breeding location gravity"
@@ -159,25 +171,31 @@ def system_update():
     output = str(t)+'  '+str(goose_position[0])+'  '+str(goose_position[1])+'  '+str(r_i_array[goose_position[0],goose_position[1]])+'\n'
     outfile.write(output)
 
-#Function to import a new NDVI file and redefine the previous "next" file as the new "current" file.
+#Subroutine to import a new NDVI file and redefine the previous "next" file as the new "current" file.
 #Calculates the gradient array between the two files.
 def importnext(t):
     global NDVI_interpolated
     global NDVI_gradient
     global NDVI_next
     global time_updated
+    #Set the current NDVI dataset to the previous "next" dataset
     NDVI_interpolated = NDVI_next
+    #Use datafiles list to find the filename of the next file to import NDVI data from
     filenameatinterval = importfolderpath+'/'+datafiles.pop(0)
-    NDVI_next = np.genfromtxt(filenameatinterval, dtype=str, skip_header=1, usecols=range(1,ncols), delimiter=' ')
-    #Can't broadcast over array to calculate gradient due to presence of "NA" values, so need to loop with terms to deal with non numerical components
+    #Use this filename to import data from file into array
+    NDVI_import = np.genfromtxt(filenameatinterval, dtype=str, skip_header=1, usecols=range(1,ncols), delimiter=' ')
+    #NDVI data imported as strings. Need to convert to integers. "NA" values set to integer value 12345, which is beyond the bounds of NDVI data and therefore a unique integer label.
     for x in range(0,nrows-1):
         for y in range(0,ncols-1):
-            if NDVI_interpolated[x,y] == "NA":
-                NDVI_gradient[x,y] = 0
+            if NDVI_import[x,y] == "NA":
+                NDVI_next[x,y] = 12345
             else:
-                NDVI_gradient[x,y] = (int(NDVI_next[x,y])-int(NDVI_interpolated[x,y]))/update_interval
+                NDVI_next[x,y] = int(NDVI_import[x,y])
+
+    #Calculate gradient for interpolation by broadcasting subtraction and then division by interval over all components in data arrays.
+    NDVI_gradient = (NDVI_next-NDVI_interpolated)/update_interval
     print (t, filenameatinterval)
-    #Change the value of the time updated for every element of the array.
+    #Change the value of the time the element was last updated for every element of the array.
     time_updated.fill(t-1)
 
 #Function to interpolate NDVI data between two files
@@ -186,15 +204,10 @@ def interpolate(possible_states,t):
     global NDVI_interpolated
     global time_updated
     #Loop over all elements in array
+    #Use difference between current time t and the last time an element was updated to determine how many multiples of the gradient should be added to interpolate that element.
     for element in possible_states:
-        if NDVI_interpolated[element] == "NA":
-            #Do nothing for NA values (which correspond to sea)
-            pass
-        else:
-            #Use gradient array to update interpolated NDVI array to next state.
-            newvalue = float(NDVI_interpolated[element]) + (t-time_updated[element])*NDVI_gradient[x,y] #(t-time_updated[element]) gives the time that has elapsed since that component of the array was last interpolated, and therefore the magnitude of the prefactor required when adding some multiple of the gradient
-            NDVI_interpolated[element] = str(newvalue)
-        #Update the value for the time last updated for each component of the possible states list.
+        NDVI_interpolated[element] = NDVI_interpolated[element] + (t-time_updated[element])*NDVI_gradient[x,y] #(t-time_updated[element]) gives the time that has elapsed since that component of the array was last interpolated, and therefore the magnitude of the prefactor required when adding some multiple of the gradient
+        #Element updated, so set the time_updated to the current time t.
         time_updated[element] = t
 
 
