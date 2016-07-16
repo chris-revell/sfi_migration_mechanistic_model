@@ -13,9 +13,9 @@ import datetime
 importfolderpath = argv[1]
 
 #Set system parameters
-t_max = 100  # Total number of timesteps
+t_max = 1000000  # Total number of timesteps
 #t_halfmonth =   # NDVI data comes as one file for every half month, so we need only specify a number of timesteps per half month and provide a finite set of months for a run.
-A     = 40000   # Prefactor for breeding site gravitational attraction
+A     = int(argv[2])   # Prefactor for breeding site gravitational attraction
 kT    = 1000    # Measure of goose temperature or "restlessness"
 #Define position of breeding ground and initial position of goose
 breeding_position = (279,1147)
@@ -31,7 +31,7 @@ print(datafiles)
 
 #Create date and time labelled folder to store the data from this run
 now = datetime.datetime.now()
-run_folder = 'output_data/'+str(now.year)+str(now.month)+str(now.day)+str(now.hour)+str(now.minute)
+run_folder = 'output_data/a='+argv[2]+"_"+str(now.year)+str(now.month)+str(now.day)+str(now.hour)+str(now.minute)
 mkdir(run_folder)
 
 #Write gnuplot commands for data in this folder to file
