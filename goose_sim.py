@@ -14,8 +14,8 @@ importfolderpath = argv[1]
 
 #Set system parameters
 t_max = 1000000  # Total number of timesteps
-A     = int(argv[2])   # Prefactor for breeding site gravitational attraction
-kT    = 2000    # Measure of goose temperature or "restlessness"
+A     = 500000   # Prefactor for breeding site gravitational attraction
+kT    = int(argv[2])    # Measure of goose temperature or "restlessness"
 #Define position of breeding ground and initial position of goose
 breeding_position = (279,1147)
 goose_position    = (495,560)
@@ -34,13 +34,16 @@ run_folder = 'output_data/'+str(now.year)+str(now.month)+str(now.day)+str(now.ho
 mkdir(run_folder)
 
 #Write gnuplot commands for data in this folder to file
-gnuplot_file = open(run_folder+'/gnuplot_commands.gnu','w')
+gnuplot_file = open('gnuplot_commands.gnu','w')
+gnuplot_file.write('set terminal png\n')
 gnuplot_file.write('unset key\n')
+gnuplot_file.write('set output '+run_folder+'/path.png'+'\n')
 gnuplot_file.write('set xrange [0:2000]\n')
 gnuplot_file.write('set yrange [700:0]\n')
 gnuplot_file.write('plot "goose_positions.txt" using 3:2 with lines lt rgb "black", "winterbreedingposition.txt" using 2:1 with points pt 3 ps 5\n')
 gnuplot_file.write('set yrange [0:1000]\n')
 gnuplot_file.write('unset xrange\n')
+gnuplot_file.write('set output '+run_folder+'/distance.png'+'\n')
 gnuplot_file.write('plot "goose_positions.txt" using 1:4 with lines\n')
 
 #Write initial conditions to file
