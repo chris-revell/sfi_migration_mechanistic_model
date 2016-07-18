@@ -30,7 +30,7 @@ print(datafiles)
 
 #Create date and time labelled folder to store the data from this run
 now = datetime.datetime.now()
-run_folder = 'output_data/'+str(now.year)+str(now.month)+str(now.day)+str(now.hour)+str(now.minute)
+run_folder = 'output_data/A'+argv[2]+'kT'+argv[3]+str(now.year)+str(now.month)+str(now.day)+str(now.hour)+str(now.minute)
 mkdir(run_folder)
 
 #Write gnuplot commands for data in this folder to file

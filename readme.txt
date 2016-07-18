@@ -17,3 +17,6 @@ python3 goose_sim.py <data/folder/path> <value_of_A> <value_of_kT>
 
 Link to Overleaf LaTeX document for this project:
 https://www.overleaf.com/5621453ctqmfc#/18190037/
+
+Bash command for multiple runs:
+for i in {1..10}; do for j in {1..10}; do python3 goose_sim.py NDVI_data/spring $(($i*100000)) $(($j*250)); done; done
