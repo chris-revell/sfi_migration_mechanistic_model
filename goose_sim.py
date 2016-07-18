@@ -13,9 +13,9 @@ import datetime
 importfolderpath = argv[1]
 
 #Set system parameters
-t_max = 1000000  # Total number of timesteps
-A     = 500000   # Prefactor for breeding site gravitational attraction
-kT    = int(argv[2])    # Measure of goose temperature or "restlessness"
+t_max = 300000  # Total number of timesteps
+A     = int(argv[2]) # Prefactor for breeding site gravitational attraction. Given at command line. ~10^5
+kT    = int(argv[3]) # Measure of goose temperature or "restlessness". Given at command line. ~10^3
 #Define position of breeding ground and initial position of goose
 breeding_position = (279,1147)
 goose_position    = (495,560)
@@ -34,17 +34,17 @@ run_folder = 'output_data/'+str(now.year)+str(now.month)+str(now.day)+str(now.ho
 mkdir(run_folder)
 
 #Write gnuplot commands for data in this folder to file
-gnuplot_file = open('gnuplot_commands.gnu','w')
-gnuplot_file.write('set terminal png\n')
-gnuplot_file.write('unset key\n')
-gnuplot_file.write('set output '+run_folder+'/path.png'+'\n')
-gnuplot_file.write('set xrange [0:2000]\n')
-gnuplot_file.write('set yrange [700:0]\n')
-gnuplot_file.write('plot "goose_positions.txt" using 3:2 with lines lt rgb "black", "winterbreedingposition.txt" using 2:1 with points pt 3 ps 5\n')
-gnuplot_file.write('set yrange [0:1000]\n')
-gnuplot_file.write('unset xrange\n')
-gnuplot_file.write('set output '+run_folder+'/distance.png'+'\n')
-gnuplot_file.write('plot "goose_positions.txt" using 1:4 with lines\n')
+#gnuplot_file = open('gnuplot_commands.gnu','w')
+#gnuplot_file.write('set terminal png\n')
+#gnuplot_file.write('unset key\n')
+#gnuplot_file.write('set output '+run_folder+'/path.png'+'\n')
+#gnuplot_file.write('set xrange [0:2000]\n')
+#gnuplot_file.write('set yrange [700:0]\n')
+#gnuplot_file.write('plot "goose_positions.txt" using 3:2 with lines lt rgb "black", "winterbreedingposition.txt" using 2:1 with points pt 3 ps 5\n')
+#gnuplot_file.write('set yrange [0:1000]\n')
+#gnuplot_file.write('unset xrange\n')
+#gnuplot_file.write('set output '+run_folder+'/distance.png'+'\n')
+#gnuplot_file.write('plot "goose_positions.txt" using 1:4 with lines\n')
 
 #Write initial conditions to file
 #Wintering position and breeding position
@@ -132,7 +132,7 @@ def find_possible_states():
 def breeding_gravity(radius):
     return (A/radius)
 
-#Subroutine to update the bolztmann factors for the possible states in the next timestep after the NDVI values of these states have been interpolated.
+#Subroutine to update the boltzmann factors for the possible states in the next timestep after the NDVI values of these states have been interpolated.
 def boltzmann_update(possible_states):
     global boltzmann_factors
     global NDVI_interpolated
