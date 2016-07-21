@@ -1,0 +1,4 @@
+A  300000
+kT  750
+t_max  60000
+Datafiles:aApr_1.txt  bApr_2.txt  cMay_1.txt  dMay_2.txt  eJun_1.txt  fJun_2.txt

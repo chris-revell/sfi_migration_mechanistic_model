@@ -7,13 +7,13 @@ import matplotlib.pyplot as plt
 from os import listdir
 from os.path import isfile, join
 from os import mkdir
-import datetime
+import time
 
 #Folder path for datafile given at command line
 importfolderpath = argv[1]
 
 #Set system parameters
-t_max = 300000  # Total number of timesteps
+t_max = 60000  # Total number of timesteps
 A     = int(argv[2]) # Prefactor for breeding site gravitational attraction. Given at command line. ~10^5
 kT    = int(argv[3]) # Measure of goose temperature or "restlessness". Given at command line. ~10^3
 #Define position of breeding ground and initial position of goose
@@ -29,8 +29,7 @@ datafiles.sort()
 print(datafiles)
 
 #Create date and time labelled folder to store the data from this run
-now = datetime.datetime.now()
-run_folder = 'output_data/A'+argv[2]+'kT'+argv[3]+str(now.year)+str(now.month)+str(now.day)+str(now.hour)+str(now.minute)
+run_folder = 'output_data/A'+argv[2]+'kT'+argv[3]+'_'+time.strftime("%y%m%d%H%M")
 mkdir(run_folder)
 
 #Write gnuplot commands for data in this folder to file

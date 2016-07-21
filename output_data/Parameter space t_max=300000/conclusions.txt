@@ -1,0 +1,9 @@
+Low values of A seem to work so long as kT is also low. For A too low or kT too high, the birds do not find the breeding ground within a reasonable timeframe, or at all.
+
+High temperatures lead to more chaotic behaviour - paths vary widely, as do distance plots. 
+
+High A values tend to override the effect of changes in NDVI data over time. 
+
+Should lean towards lower A and kT values where possible. 
+
+Can always make a tradeoff between values of A or kT and the number of time steps - in some cases the bird will eventually find the breeding ground even for large KT and small A if given enough time steps. However, this will tend to lead to a very circuitous route. The distance against time plots do not allow us to put a constraint on the number of time steps (or, equivalently, the number of time steps per month), but the paths or some measure of total distance travelled might. 
