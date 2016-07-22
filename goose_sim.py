@@ -13,12 +13,20 @@ import time
 importfolderpath = argv[1]
 
 #Set system parameters
-t_max = 60000  # Total number of timesteps
+t_max = 60  # Total number of timesteps
 A     = int(argv[2]) # Prefactor for breeding site gravitational attraction. Given at command line. ~10^5
 kT    = int(argv[3]) # Measure of goose temperature or "restlessness". Given at command line. ~10^3
 #Define position of breeding ground and initial position of goose
 breeding_position = (279,1147)
 goose_position    = (495,560)
+
+n_runs = 2
+output_data_store = np.empty((t_max,(n_runs*3+1)))
+for i in range(0,t_max):
+    output_data_store[i,0] = i
+
+
+
 
 #From folder path provided at command line, find list of files to import NDVI data from.
 #Each file corresponds to half a month. "isfile" checks that we find only files, not directories.
@@ -56,7 +64,7 @@ parameterfile.write("A  "+str(A)+"\nkT  "+str(kT)+"\nt_max  "+str(t_max)+'\nData
 parameterfile.write('  '.join(datafiles))
 
 #Open file into which goose position results are printed
-outfile = open(run_folder+'/goose_positions.txt','w')
+#outfile = open(run_folder+'/goose_positions.txt','wb')
 
 #Set interval for importing new datafiles. Note -1 because the system ends once interpolation reaches the state of the final file.
 update_interval = t_max/(len(datafiles)-1)
@@ -94,7 +102,6 @@ for x in range(0,nrows-1):
 
 #Import initial NDVI file
 initialfilename = importfolderpath+'/'+datafiles.pop(0)
-print (initialfilename)
 NDVI_import = np.genfromtxt(initialfilename, dtype=str, skip_header=1, usecols=range(1,ncols), delimiter=' ')
 #Data imported as strings. Convert to interger format, setting "NA" values to unique intger label 12345
 for x in range(0,nrows-1):
@@ -146,11 +153,12 @@ def boltzmann_update(possible_states):
             boltzmann_factors[element] = exp(potential)
 
 #Define subroutine to update the position of the goose
-def system_update():
+def system_update(t,n):
     global boltzmann_factors
     global goose_position
-    global outfile
+#    global outfile
     global possible_states
+    global output_data_store
 
     #Sum Boltzmann factors for possible states
     boltzmann_sum = 0
@@ -170,8 +178,11 @@ def system_update():
             pass
 
     #Now that we have updated the goose position, write it to output file
-    output = str(t)+'  '+str(goose_position[0])+'  '+str(goose_position[1])+'  '+str(r_i_array[goose_position[0],goose_position[1]])+'\n'
-    outfile.write(output)
+#    output = str(t)+'  '+str(goose_position[0])+'  '+str(goose_position[1])+'  '+str(r_i_array[goose_position[0],goose_position[1]])+'\n'
+#    outfile.write(output)
+    output_data_store[t,(n-1)*3+1] = goose_position[0]
+    output_data_store[t,(n-1)*3+1] = goose_position[1]
+    output_data_store[t,(n-1)*3+1] = r_i_array[goose_position[0],goose_position[1]]
 
 #Subroutine to import a new NDVI file and redefine the previous "next" file as the new "current" file.
 #Calculates the gradient array between the two files.
@@ -212,24 +223,44 @@ def interpolate(possible_states,t):
         #Element updated, so set the time_updated to the current time t.
         time_updated[element] = t
 
+for i in range (0,n_runs):
+    print('run '+str(i))
+    #Reset system for each new run
+    goose_position    = (495,560)
+    datafiles = [f for f in listdir(importfolderpath) if isfile(join(importfolderpath, f)) and f[-1]=='t']
+    datafiles.sort()
+    NDVI_import = np.genfromtxt(initialfilename, dtype=str, skip_header=1, usecols=range(1,ncols), delimiter=' ')
+    #Data imported as strings. Convert to interger format, setting "NA" values to unique intger label 12345
+    for x in range(0,nrows-1):
+        for y in range(0,ncols-1):
+            if NDVI_import[x,y] == "NA":
+                NDVI_next[x,y] = 12345
+            else:
+                NDVI_next[x,y] = int(NDVI_import[x,y])
+    #Find possible states for first run of system
 
-#Find possible states for first run of system
-find_possible_states()
-#Loop over timesteps
-for t in range (0,t_max):
 
-    #For every import interval, import a new file into NDVI_next and redefine NDVI_interpolated to hold the old values of NDVI_next
-    if (int(t%update_interval) == 0):
-        importnext(t)
-
-    #Update system state according to current interpolated NDVI values and corresponding BOltzmann factors.
-    system_update()
-
-    #Find possible states for next run of system
     find_possible_states()
-
-    #Update the interpolated NDVI array
-    interpolate(possible_states,t)
-
-    #Update Boltzmann factors according to the new interpolated NDVI values
+    #Loop over timesteps
     boltzmann_update(possible_states)
+    for t in range (0,t_max):
+
+        #For every import interval, import a new file into NDVI_next and redefine NDVI_interpolated to hold the old values of NDVI_next
+        if (int(t%update_interval) == 0):
+            importnext(t)
+
+        #Update system state according to current interpolated NDVI values and corresponding BOltzmann factors.
+        system_update(t,i)
+
+        #Find possible states for next run of system
+        find_possible_states()
+
+        #Update the interpolated NDVI array
+        interpolate(possible_states,t)
+
+        #Update Boltzmann factors according to the new interpolated NDVI values
+        boltzmann_update(possible_states)
+
+#Write stored data array to file
+#np.savetxt(run_folder+'/goose_positions.txt', output_data_store, delimiter='  ')
+output_data_store.tofile(run_folder+'/goose_positions.txt',sep='  ')
