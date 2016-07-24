@@ -13,14 +13,14 @@ import time
 importfolderpath = argv[1]
 
 #Set system parameters
-t_max = 60  # Total number of timesteps
+t_max = 60000  # Total number of timesteps
 A     = int(argv[2]) # Prefactor for breeding site gravitational attraction. Given at command line. ~10^5
 kT    = int(argv[3]) # Measure of goose temperature or "restlessness". Given at command line. ~10^3
 #Define position of breeding ground and initial position of goose
 breeding_position = (279,1147)
 goose_position    = (495,560)
 
-n_runs = 2
+n_runs = 10
 output_data_store = np.empty((t_max,(n_runs*3+1)))
 for i in range(0,t_max):
     output_data_store[i,0] = i
@@ -180,9 +180,10 @@ def system_update(t,n):
     #Now that we have updated the goose position, write it to output file
 #    output = str(t)+'  '+str(goose_position[0])+'  '+str(goose_position[1])+'  '+str(r_i_array[goose_position[0],goose_position[1]])+'\n'
 #    outfile.write(output)
-    output_data_store[t,(n-1)*3+1] = goose_position[0]
-    output_data_store[t,(n-1)*3+1] = goose_position[1]
-    output_data_store[t,(n-1)*3+1] = r_i_array[goose_position[0],goose_position[1]]
+    print(goose_position[0],goose_position[1],r_i_array[goose_position[0],goose_position[1]])
+    output_data_store[t,n*3+1] = goose_position[0]
+    output_data_store[t,n*3+2] = goose_position[1]
+    output_data_store[t,n*3+3] = r_i_array[goose_position[0],goose_position[1]]
 
 #Subroutine to import a new NDVI file and redefine the previous "next" file as the new "current" file.
 #Calculates the gradient array between the two files.
@@ -262,5 +263,11 @@ for i in range (0,n_runs):
         boltzmann_update(possible_states)
 
 #Write stored data array to file
-#np.savetxt(run_folder+'/goose_positions.txt', output_data_store, delimiter='  ')
-output_data_store.tofile(run_folder+'/goose_positions.txt',sep='  ')
+np.savetxt(run_folder+'/goose_positions.txt', output_data_store, delimiter='  ')
+outfile2 = open(run_folder+'/distance_average.txt','w')
+for i in range (0,t_max):
+    average = 0
+    for j in range (0,n_runs):
+        average = average + output_data_store[i,3*j+3]
+    average = average/n_runs
+    outfile2.write(str(i)+'  '+str(average)+'\n')
