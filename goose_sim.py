@@ -180,7 +180,6 @@ def system_update(t,n):
     #Now that we have updated the goose position, write it to output file
 #    output = str(t)+'  '+str(goose_position[0])+'  '+str(goose_position[1])+'  '+str(r_i_array[goose_position[0],goose_position[1]])+'\n'
 #    outfile.write(output)
-    print(goose_position[0],goose_position[1],r_i_array[goose_position[0],goose_position[1]])
     output_data_store[t,n*3+1] = goose_position[0]
     output_data_store[t,n*3+2] = goose_position[1]
     output_data_store[t,n*3+3] = r_i_array[goose_position[0],goose_position[1]]
