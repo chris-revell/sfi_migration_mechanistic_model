@@ -276,12 +276,6 @@ for i in range (0,t_max):
     #Write data to file
     outfile2.write(str(i)+'  '+str(mean)+'  '+str(std_dev)+'\n')
 
-
-    #Plot data with matplotlib
-    #pyplot.errorbar(i,mean,std_dev)
-    #pyplot.plot(mean)
-    #pyplot.fill_between(i,(mean+std_dev),(mean-std_dev))
-
 #Show plot of data in matplotlib
 pyplot.plot(mean_list)
 pyplot.fill_between(time_list,(mean_list+std_dev_list),(mean_list-std_dev_list), alpha=0.5)
