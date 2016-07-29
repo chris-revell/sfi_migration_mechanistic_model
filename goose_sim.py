@@ -3,42 +3,38 @@ from sys import argv
 import numpy as np
 import random
 from math import exp
-import matplotlib.pyplot as plt
-from os import listdir
-from os.path import isfile, join
-from os import mkdir
+import os
 import time
+import matplotlib.pyplot as pyplot
 
 #Folder path for datafile given at command line
 importfolderpath = argv[1]
 
 #Set system parameters
-t_max = 60000  # Total number of timesteps
+t_max = 100000  # Total number of timesteps
 A     = int(argv[2]) # Prefactor for breeding site gravitational attraction. Given at command line. ~10^5
 kT    = int(argv[3]) # Measure of goose temperature or "restlessness". Given at command line. ~10^3
+n_runs = 10 # Number of runs with this set of parameters. Program will produce an average and standard deviation over all runs.
 #Define position of breeding ground and initial position of goose
 breeding_position = (279,1147)
 goose_position    = (495,560)
 
-n_runs = 10
+#Create array to store data from all runs
 output_data_store = np.empty((t_max,(n_runs*3+1)))
 for i in range(0,t_max):
     output_data_store[i,0] = i
-
-
-
 
 #From folder path provided at command line, find list of files to import NDVI data from.
 #Each file corresponds to half a month. "isfile" checks that we find only files, not directories.
 #f[-1]=='t' excludes anything but .txt files (specifically to exclude .ds_store file on Mac)
 #Note that list will be ordered alphabetically, so alphabetical order of filenames must match temporal order of months.
-datafiles = [f for f in listdir(importfolderpath) if isfile(join(importfolderpath, f)) and f[-1]=='t']
+datafiles = [f for f in os.listdir(importfolderpath) if os.path.isfile(os.path.join(importfolderpath, f)) and f[-1]=='t']
 datafiles.sort()
 print(datafiles)
 
 #Create date and time labelled folder to store the data from this run
 run_folder = 'output_data/A'+argv[2]+'kT'+argv[3]+'_'+time.strftime("%y%m%d%H%M")
-mkdir(run_folder)
+os.mkdir(run_folder)
 
 #Write gnuplot commands for data in this folder to file
 #gnuplot_file = open('gnuplot_commands.gnu','w')
@@ -61,7 +57,7 @@ winterbreedingpositionfile.close()
 #Write simulation parameters to data file
 parameterfile = open(run_folder+'/parameters.txt','w')
 parameterfile.write("A  "+str(A)+"\nkT  "+str(kT)+"\nt_max  "+str(t_max)+'\nDatafiles:')
-parameterfile.write('  '.join(datafiles))
+parameterfile.write("  ".join(datafiles))
 
 #Open file into which goose position results are printed
 #outfile = open(run_folder+'/goose_positions.txt','wb')
@@ -156,7 +152,6 @@ def boltzmann_update(possible_states):
 def system_update(t,n):
     global boltzmann_factors
     global goose_position
-#    global outfile
     global possible_states
     global output_data_store
 
@@ -177,9 +172,7 @@ def system_update(t,n):
         else:
             pass
 
-    #Now that we have updated the goose position, write it to output file
-#    output = str(t)+'  '+str(goose_position[0])+'  '+str(goose_position[1])+'  '+str(r_i_array[goose_position[0],goose_position[1]])+'\n'
-#    outfile.write(output)
+    #Now that we have updated the goose position, write it to output data store array
     output_data_store[t,n*3+1] = goose_position[0]
     output_data_store[t,n*3+2] = goose_position[1]
     output_data_store[t,n*3+3] = r_i_array[goose_position[0],goose_position[1]]
@@ -227,7 +220,7 @@ for i in range (0,n_runs):
     print('run '+str(i))
     #Reset system for each new run
     goose_position    = (495,560)
-    datafiles = [f for f in listdir(importfolderpath) if isfile(join(importfolderpath, f)) and f[-1]=='t']
+    datafiles = [f for f in os.listdir(importfolderpath) if os.path.isfile(os.path.join(importfolderpath, f)) and f[-1]=='t']
     datafiles.sort()
     NDVI_import = np.genfromtxt(initialfilename, dtype=str, skip_header=1, usecols=range(1,ncols), delimiter=' ')
     #Data imported as strings. Convert to interger format, setting "NA" values to unique intger label 12345
@@ -264,9 +257,32 @@ for i in range (0,n_runs):
 #Write stored data array to file
 np.savetxt(run_folder+'/goose_positions.txt', output_data_store, delimiter='  ')
 outfile2 = open(run_folder+'/distance_average.txt','w')
+
+#Calculate mean and standard deviation at all timepoints.
+mean_list    = np.zeros(t_max)
+std_dev_list = np.zeros(t_max)
+time_list    = np.zeros(t_max)
 for i in range (0,t_max):
-    average = 0
+    mean    = 0
+    std_dev = 0
     for j in range (0,n_runs):
-        average = average + output_data_store[i,3*j+3]
-    average = average/n_runs
-    outfile2.write(str(i)+'  '+str(average)+'\n')
+        mean    = mean + output_data_store[i,3*j+3]
+        std_dev = std_dev + output_data_store[i,3*j+3]**2
+    mean    = mean/n_runs
+    std_dev = (std_dev/n_runs - mean**2)**0.5
+    mean_list[i]    = mean
+    std_dev_list[i] = std_dev
+    time_list[i]    = i
+    #Write data to file
+    outfile2.write(str(i)+'  '+str(mean)+'  '+str(std_dev)+'\n')
+
+
+    #Plot data with matplotlib
+    #pyplot.errorbar(i,mean,std_dev)
+    #pyplot.plot(mean)
+    #pyplot.fill_between(i,(mean+std_dev),(mean-std_dev))
+
+#Show plot of data in matplotlib
+pyplot.plot(mean_list)
+pyplot.fill_between(time_list,(mean_list+std_dev_list),(mean_list-std_dev_list), alpha=0.5)
+pyplot.show()
