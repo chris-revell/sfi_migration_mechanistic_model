@@ -276,7 +276,12 @@ for i in range (0,t_max):
     #Write data to file
     outfile2.write(str(i)+'  '+str(mean)+'  '+str(std_dev)+'\n')
 
-#Show plot of data in matplotlib
+#Show plot of data in with pyplot
+pyplot.figure(1)
 pyplot.plot(mean_list)
 pyplot.fill_between(time_list,(mean_list+std_dev_list),(mean_list-std_dev_list), alpha=0.5)
-pyplot.show()
+pyplot.axis([0,t_max,0,700])
+pyplot.xlabel('Time')
+pyplot.ylabel('Distance from breeding ground')
+#Need to add title and monthly dates 
+pyplot.savefig(os.path.join(run_folder,'distance.pdf'))
