@@ -41,19 +41,6 @@ else
 run_folder = 'output_data/A'+argv[2]+'kT'+argv[3]+'_'+time.strftime("%y%m%d%H%M")
 os.mkdir(run_folder)
 
-#Write gnuplot commands for data in this folder to file
-#gnuplot_file = open('gnuplot_commands.gnu','w')
-#gnuplot_file.write('set terminal png\n')
-#gnuplot_file.write('unset key\n')
-#gnuplot_file.write('set output '+run_folder+'/path.png'+'\n')
-#gnuplot_file.write('set xrange [0:2000]\n')
-#gnuplot_file.write('set yrange [700:0]\n')
-#gnuplot_file.write('plot "goose_positions.txt" using 3:2 with lines lt rgb "black", "winterbreedingposition.txt" using 2:1 with points pt 3 ps 5\n')
-#gnuplot_file.write('set yrange [0:1000]\n')
-#gnuplot_file.write('unset xrange\n')
-#gnuplot_file.write('set output '+run_folder+'/distance.png'+'\n')
-#gnuplot_file.write('plot "goose_positions.txt" using 1:4 with lines\n')
-
 #Write initial conditions to file
 #Wintering position and breeding position
 winterbreedingpositionfile = open(run_folder+'/winterbreedingposition.txt','w')
@@ -63,9 +50,6 @@ winterbreedingpositionfile.close()
 parameterfile = open(run_folder+'/parameters.txt','w')
 parameterfile.write("A  "+str(A)+"\nkT  "+str(kT)+"\nt_max  "+str(t_max)+'\nDatafiles:')
 parameterfile.write("  ".join(datafiles))
-
-#Open file into which goose position results are printed
-#outfile = open(run_folder+'/goose_positions.txt','wb')
 
 #Set interval for importing new datafiles. Note -1 because the system ends once interpolation reaches the state of the final file.
 update_interval = t_max/(len(datafiles)-1)
@@ -250,6 +234,10 @@ for i in range (0,n_runs):
         #Update system state according to current interpolated NDVI values and corresponding BOltzmann factors.
         system_update(t,i)
 
+        #Add position data to plot
+        pyplot.figure(2)
+        pyplot.plot(goose)
+
         #Find possible states for next run of system
         find_possible_states()
 
@@ -281,12 +269,16 @@ for i in range (0,t_max):
     #Write data to file
     outfile2.write(str(i)+'  '+str(mean)+'  '+str(std_dev)+'\n')
 
-#Show plot of data in with pyplot
+#Plot data with pyplot
+#Plot distance against time
 pyplot.figure(1)
 pyplot.plot(mean_list)
 pyplot.fill_between(time_list,(mean_list+std_dev_list),(mean_list-std_dev_list), alpha=0.5)
 pyplot.axis([0,t_max,0,700])
 pyplot.xlabel('Time')
 pyplot.ylabel('Distance from breeding ground')
+pyplot.title('Distance from breeding ground against time')
 #Need to add title and monthly dates
 pyplot.savefig(os.path.join(run_folder,'distance.pdf'))
+
+#Plot path
