@@ -33,6 +33,11 @@ datafiles.sort()
 print(datafiles)
 
 #Create date and time labelled folder to store the data from this run
+#First ensure the output_data folder exists
+if os.path.exists("../output_data"):
+    pass
+else
+    os.mkdir("../output_data")
 run_folder = 'output_data/A'+argv[2]+'kT'+argv[3]+'_'+time.strftime("%y%m%d%H%M")
 os.mkdir(run_folder)
 
@@ -283,5 +288,5 @@ pyplot.fill_between(time_list,(mean_list+std_dev_list),(mean_list-std_dev_list),
 pyplot.axis([0,t_max,0,700])
 pyplot.xlabel('Time')
 pyplot.ylabel('Distance from breeding ground')
-#Need to add title and monthly dates 
+#Need to add title and monthly dates
 pyplot.savefig(os.path.join(run_folder,'distance.pdf'))
