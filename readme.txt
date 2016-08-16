@@ -13,6 +13,8 @@ It is possible to specify the number of times that the simulation should be run 
 
 This program is designed to be run in python3. In python2, a bug arises that causes .pop(0) to be applied to an empty list. This is because python3 uses float division by default, whereas python2 uses integer division.
 
+matplotlib and numpy must be installed for the program to run. 
+
 Run the program by using the following command line command:
 
 python3 goose_sim.py <data/folder/path> <value_of_A> <value_of_kT>

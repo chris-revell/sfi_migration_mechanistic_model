@@ -14,7 +14,7 @@ importfolderpath = argv[1]
 t_max = 100000  # Total number of timesteps
 A     = int(argv[2]) # Prefactor for breeding site gravitational attraction. Given at command line. ~10^5
 kT    = int(argv[3]) # Measure of goose temperature or "restlessness". Given at command line. ~10^3
-n_runs = 10 # Number of runs with this set of parameters. Program will produce an average and standard deviation over all runs.
+n_runs = 5 # Number of runs with this set of parameters. Program will produce an average and standard deviation over all runs.
 #Define position of breeding ground and initial position of goose
 breeding_position = (279,1147)
 goose_position    = (495,560)
@@ -36,9 +36,9 @@ print(datafiles)
 #First ensure the output_data folder exists
 if os.path.exists("../output_data"):
     pass
-else
+else:
     os.mkdir("../output_data")
-run_folder = 'output_data/A'+argv[2]+'kT'+argv[3]+'_'+time.strftime("%y%m%d%H%M")
+run_folder = '../output_data/A'+argv[2]+'kT'+argv[3]+'_'+time.strftime("%y%m%d%H%M")
 os.mkdir(run_folder)
 
 #Write initial conditions to file
@@ -234,10 +234,6 @@ for i in range (0,n_runs):
         #Update system state according to current interpolated NDVI values and corresponding BOltzmann factors.
         system_update(t,i)
 
-        #Add position data to plot
-        pyplot.figure(2)
-        pyplot.plot(goose)
-
         #Find possible states for next run of system
         find_possible_states()
 
@@ -269,6 +265,13 @@ for i in range (0,t_max):
     #Write data to file
     outfile2.write(str(i)+'  '+str(mean)+'  '+str(std_dev)+'\n')
 
+#Calculate centre of mass position for all runs at each time point
+COM_array = np.zeros((t_max,2))
+for i in range(0,n_runs):
+    COM_array[:,0] = COM_array[:,0] + output_data_store[:,3*i+1]
+    COM_array[:,1] = COM_array[:,1] + output_data_store[:,3*i+2]
+COM_array = COM_array/n_runs
+
 #Plot data with pyplot
 #Plot distance against time
 pyplot.figure(1)
@@ -281,4 +284,21 @@ pyplot.title('Distance from breeding ground against time')
 #Need to add title and monthly dates
 pyplot.savefig(os.path.join(run_folder,'distance.pdf'))
 
-#Plot path
+#Plot paths
+pyplot.figure(2)
+for i in range(0,n_runs):
+    pyplot.plot(output_data_store[:,3*i+2], output_data_store[:,3*i+1])
+pyplot.axis([0,2000,700,0])
+pyplot.xlabel('Longitude')
+pyplot.ylabel('Latitude')
+pyplot.title('Simulated paths of geese')
+pyplot.savefig(os.path.join(run_folder,'path.pdf'))
+
+#Plot centre of mass path (centre of mass of positions of all runs at each timepoint)
+pyplot.figure(3)
+pyplot.plot(COM_array[:,1], COM_array[:,0])
+pyplot.axis([0,2000,700,0])
+pyplot.xlabel('Longitude')
+pyplot.ylabel('Latitude')
+pyplot.title('Centre of mass at each timepoint of several simulation runs')
+pyplot.savefig(os.path.join(run_folder,'COM_path.pdf'))
