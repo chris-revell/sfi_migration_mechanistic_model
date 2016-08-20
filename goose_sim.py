@@ -11,7 +11,6 @@ import matplotlib.pyplot as pyplot
 importfolderpath = argv[1]
 
 #Set system parameters
-t_max = 100000  # Total number of timesteps
 A     = int(argv[2]) # Prefactor for breeding site gravitational attraction. Given at command line. ~10^5
 kT    = int(argv[3]) # Measure of goose temperature or "restlessness". Given at command line. ~10^3
 n_runs = 5 # Number of runs with this set of parameters. Program will produce an average and standard deviation over all runs.
@@ -31,6 +30,13 @@ for i in range(0,t_max):
 datafiles = [f for f in os.listdir(importfolderpath) if os.path.isfile(os.path.join(importfolderpath, f)) and f[-1]=='t']
 datafiles.sort()
 print(datafiles)
+
+#If each datafile is half a month, this corresponds to roughly 15 days per file, which is 360 hours.
+#Thus set the total run time in hours from the total number of input files minus 1, multiplied by 360.
+#Minus 1 required becauase the system runs on the interpolated spaces between files.
+t_max = 360*(len(datafiles)-1)  # Total time in hours for simulation
+#Set output interval
+output_interval = t_max/1000 #output_interval ~ 1 hour
 
 #Create date and time labelled folder to store the data from this run
 #First ensure the output_data folder exists
@@ -161,11 +167,6 @@ def system_update(t,n):
         else:
             pass
 
-    #Now that we have updated the goose position, write it to output data store array
-    output_data_store[t,n*3+1] = goose_position[0]
-    output_data_store[t,n*3+2] = goose_position[1]
-    output_data_store[t,n*3+3] = r_i_array[goose_position[0],goose_position[1]]
-
 #Subroutine to import a new NDVI file and redefine the previous "next" file as the new "current" file.
 #Calculates the gradient array between the two files.
 def importnext(t):
@@ -225,7 +226,7 @@ for i in range (0,n_runs):
     find_possible_states()
     #Loop over timesteps
     boltzmann_update(possible_states)
-    for t in range (0,t_max):
+    while t<t_max:
 
         #For every import interval, import a new file into NDVI_next and redefine NDVI_interpolated to hold the old values of NDVI_next
         if (int(t%update_interval) == 0):
@@ -242,6 +243,8 @@ for i in range (0,n_runs):
 
         #Update Boltzmann factors according to the new interpolated NDVI values
         boltzmann_update(possible_states)
+
+        t=
 
 #Write stored data array to file
 np.savetxt(run_folder+'/goose_positions.txt', output_data_store, delimiter='  ')
