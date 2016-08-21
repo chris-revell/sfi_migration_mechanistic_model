@@ -13,7 +13,7 @@ importfolderpath = argv[1]
 #Set system parameters
 A       = int(argv[2]) # Prefactor for breeding site gravitational attraction. Given at command line. ~10^5
 kT      = int(argv[3]) # Measure of goose temperature or "restlessness". Given at command line. ~10^3
-n_runs  = 5            # Number of runs with this set of parameters. Program will produce an average and standard deviation over all runs.
+n_runs  = 2            # Number of runs with this set of parameters. Program will produce an average and standard deviation over all runs.
 n_output= 1000         # Number of data outputs to file
 #Define position of breeding ground and initial position of goose
 breeding_position = (279,1147)
@@ -35,7 +35,7 @@ t_max = 360*(len(datafiles)-1)  # Total time in hours for simulation
 output_interval = t_max/n_output #output_interval ~ 1 hour
 
 #Create array to store data from all runs
-output_data_store = np.empty((t_max,(n_runs*4)))
+output_data_store = np.empty((n_output,(n_runs*4)))
 
 #Create date and time labelled folder to store the data from this run
 #First ensure the output_data folder exists
@@ -191,10 +191,7 @@ def importnext(t):
     NDVI_gradient = (NDVI_next-NDVI_interpolated)/update_interval
     print (t, filenameatinterval)
     #Change the value of the time the element was last updated for every element of the array.
-
-    ############################################################
-    time_updated.fill(t-1)
-    ############################################################
+    time_updated.fill(t)
 
 #Function to interpolate NDVI data between two files
 def interpolate(possible_states,t):
@@ -206,9 +203,7 @@ def interpolate(possible_states,t):
     for element in possible_states:
         NDVI_interpolated[element] = NDVI_interpolated[element] + (t-time_updated[element])*NDVI_gradient[x,y] #(t-time_updated[element]) gives the time that has elapsed since that component of the array was last interpolated, and therefore the magnitude of the prefactor required when adding some multiple of the gradient
         #Element updated, so set the time_updated to the current time t.
-        ############################################################
         time_updated[element] = t
-        ############################################################
 
 for i in range (0,n_runs):
     print('run '+str(i))
@@ -243,10 +238,12 @@ for i in range (0,n_runs):
         timetesttuple = divmod(t,update_interval)
         if int(timetesttuple[1]) == 0:
             #Output data to storage array at every output interval
-            output_data_store[timetesttuple[0],n*4]   = t
-            output_data_store[timetesttuple[0],n*4+1] = goose_position[0]
-            output_data_store[timetesttuple[0],n*3+2] = goose_position[1]
-            output_data_store[timetesttuple[0],n*3+3] = r_i_array[goose_position[0],goose_position[1]]
+            output_data_store[timetesttuple[0],i*4]   = t
+            output_data_store[timetesttuple[0],i*4+1] = goose_position[0]
+            output_data_store[timetesttuple[0],i*4+2] = goose_position[1]
+            output_data_store[timetesttuple[0],i*4+3] = r_i_array[goose_position[0],goose_position[1]]
+
+        t = t + 1#*distancefromstep*
 
         #Find possible states for next run of system
         find_possible_states()
@@ -257,22 +254,22 @@ for i in range (0,n_runs):
         #Update Boltzmann factors according to the new interpolated NDVI values
         boltzmann_update(possible_states)
 
-        t = t + 1#*distancefromstep*
+
 
 #Write stored data array to file
 np.savetxt(run_folder+'/goose_positions.txt', output_data_store, delimiter='  ')
 outfile2 = open(run_folder+'/distance_average.txt','w')
 
-#Calculate mean and standard deviation at all timepoints.
-mean_list    = np.zeros(t_max)
-std_dev_list = np.zeros(t_max)
-time_list    = np.zeros(t_max)
-for i in range (0,t_max):
+#Calculate mean and standard deviation of distance from breeding ground at all timepoints.
+mean_list    = np.zeros(n_output)
+std_dev_list = np.zeros(n_output)
+time_list    = np.zeros(n_output)
+for i in range (0,n_output):
     mean    = 0
     std_dev = 0
     for j in range (0,n_runs):
-        mean    = mean + output_data_store[i,3*j+3]
-        std_dev = std_dev + output_data_store[i,3*j+3]**2
+        mean    = mean + output_data_store[i,4*j+3]
+        std_dev = std_dev + output_data_store[i,4*j+3]**2
     mean    = mean/n_runs
     std_dev = (std_dev/n_runs - mean**2)**0.5
     mean_list[i]    = mean
@@ -282,11 +279,12 @@ for i in range (0,t_max):
     outfile2.write(str(i)+'  '+str(mean)+'  '+str(std_dev)+'\n')
 
 #Calculate centre of mass position for all runs at each time point
-COM_array = np.zeros((t_max,2))
+COM_array = np.zeros((n_output,2))
 for i in range(0,n_runs):
-    COM_array[:,0] = COM_array[:,0] + output_data_store[:,3*i+1]
-    COM_array[:,1] = COM_array[:,1] + output_data_store[:,3*i+2]
+    COM_array[:,0] = COM_array[:,0] + output_data_store[:,4*i+1]
+    COM_array[:,1] = COM_array[:,1] + output_data_store[:,4*i+2]
 COM_array = COM_array/n_runs
+np.savetxt(run_folder+'/COM_path.txt', COM_array, delimiter='  ')
 
 #Plot data with pyplot
 #Plot distance against time
@@ -303,7 +301,7 @@ pyplot.savefig(os.path.join(run_folder,'distance.pdf'))
 #Plot paths
 pyplot.figure(2)
 for i in range(0,n_runs):
-    pyplot.plot(output_data_store[:,3*i+2], output_data_store[:,3*i+1])
+    pyplot.plot(output_data_store[:,4*i+2], output_data_store[:,4*i+1])
 pyplot.axis([0,2000,700,0])
 pyplot.xlabel('Longitude')
 pyplot.ylabel('Latitude')
