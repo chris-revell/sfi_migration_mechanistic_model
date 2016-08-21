@@ -13,7 +13,7 @@ importfolderpath = argv[1]
 #Set system parameters
 A       = int(argv[2]) # Prefactor for breeding site gravitational attraction. Given at command line. ~10^5
 kT      = int(argv[3]) # Measure of goose temperature or "restlessness". Given at command line. ~10^3
-n_runs  = 2            # Number of runs with this set of parameters. Program will produce an average and standard deviation over all runs.
+n_runs  = 10            # Number of runs with this set of parameters. Program will produce an average and standard deviation over all runs.
 n_output= 1000         # Number of data outputs to file
 #Define position of breeding ground and initial position of goose
 breeding_position = (279,1147)
@@ -35,7 +35,7 @@ t_max = 360*(len(datafiles)-1)  # Total time in hours for simulation
 output_interval = t_max/n_output #output_interval ~ 1 hour
 
 #Create array to store data from all runs
-output_data_store = np.empty((n_output,(n_runs*4)))
+output_data_store = np.empty((n_output,(n_runs*4)),dtype=float)
 
 #Create date and time labelled folder to store the data from this run
 #First ensure the output_data folder exists
@@ -225,36 +225,29 @@ for i in range (0,n_runs):
     find_possible_states()
     #Loop over timesteps
     boltzmann_update(possible_states)
-    t = 0
+    t = 0.0
+    counter = 0
     while t<t_max:
-
         #For every import interval, import a new file into NDVI_next and redefine NDVI_interpolated to hold the old values of NDVI_next
-        if (int(t%update_interval) == 0):
+        if (t>=counter*update_interval):
             importnext(t)
-
+            counter = counter + 1
         #Update system state according to current interpolated NDVI values and corresponding BOltzmann factors.
         system_update(t,i)
-
-        timetesttuple = divmod(t,update_interval)
+        timetesttuple = divmod(t,output_interval)
         if int(timetesttuple[1]) == 0:
             #Output data to storage array at every output interval
-            output_data_store[timetesttuple[0],i*4]   = t
-            output_data_store[timetesttuple[0],i*4+1] = goose_position[0]
-            output_data_store[timetesttuple[0],i*4+2] = goose_position[1]
-            output_data_store[timetesttuple[0],i*4+3] = r_i_array[goose_position[0],goose_position[1]]
-
-        t = t + 1#*distancefromstep*
-
+            output_data_store[int(timetesttuple[0]),i*4]   = t
+            output_data_store[int(timetesttuple[0]),i*4+1] = goose_position[0]
+            output_data_store[int(timetesttuple[0]),i*4+2] = goose_position[1]
+            output_data_store[int(timetesttuple[0]),i*4+3] = r_i_array[goose_position[0],goose_position[1]]
+        t = t + 0.01#*distancefromstep*
         #Find possible states for next run of system
         find_possible_states()
-
         #Update the interpolated NDVI array
         interpolate(possible_states,t)
-
         #Update Boltzmann factors according to the new interpolated NDVI values
         boltzmann_update(possible_states)
-
-
 
 #Write stored data array to file
 np.savetxt(run_folder+'/goose_positions.txt', output_data_store, delimiter='  ')
@@ -291,7 +284,7 @@ np.savetxt(run_folder+'/COM_path.txt', COM_array, delimiter='  ')
 pyplot.figure(1)
 pyplot.plot(mean_list)
 pyplot.fill_between(time_list,(mean_list+std_dev_list),(mean_list-std_dev_list), alpha=0.5)
-pyplot.axis([0,t_max,0,700])
+pyplot.axis([0,n_output,0,700])
 pyplot.xlabel('Time')
 pyplot.ylabel('Distance from breeding ground')
 pyplot.title('Distance from breeding ground against time')
