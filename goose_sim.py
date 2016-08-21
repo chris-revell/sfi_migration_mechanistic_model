@@ -11,17 +11,13 @@ import matplotlib.pyplot as pyplot
 importfolderpath = argv[1]
 
 #Set system parameters
-A     = int(argv[2]) # Prefactor for breeding site gravitational attraction. Given at command line. ~10^5
-kT    = int(argv[3]) # Measure of goose temperature or "restlessness". Given at command line. ~10^3
-n_runs = 5 # Number of runs with this set of parameters. Program will produce an average and standard deviation over all runs.
+A       = int(argv[2]) # Prefactor for breeding site gravitational attraction. Given at command line. ~10^5
+kT      = int(argv[3]) # Measure of goose temperature or "restlessness". Given at command line. ~10^3
+n_runs  = 5            # Number of runs with this set of parameters. Program will produce an average and standard deviation over all runs.
+n_output= 1000         # Number of data outputs to file
 #Define position of breeding ground and initial position of goose
 breeding_position = (279,1147)
 goose_position    = (495,560)
-
-#Create array to store data from all runs
-output_data_store = np.empty((t_max,(n_runs*3+1)))
-for i in range(0,t_max):
-    output_data_store[i,0] = i
 
 #From folder path provided at command line, find list of files to import NDVI data from.
 #Each file corresponds to half a month. "isfile" checks that we find only files, not directories.
@@ -36,7 +32,12 @@ print(datafiles)
 #Minus 1 required becauase the system runs on the interpolated spaces between files.
 t_max = 360*(len(datafiles)-1)  # Total time in hours for simulation
 #Set output interval
-output_interval = t_max/1000 #output_interval ~ 1 hour
+output_interval = t_max/n_output #output_interval ~ 1 hour
+
+#Create array to store data from all runs
+output_data_store = np.empty((t_max,(n_runs*4)))
+for i in range(0,t_max):
+    output_data_store[i,0] = i
 
 #Create date and time labelled folder to store the data from this run
 #First ensure the output_data folder exists
@@ -226,6 +227,7 @@ for i in range (0,n_runs):
     find_possible_states()
     #Loop over timesteps
     boltzmann_update(possible_states)
+    t = 0
     while t<t_max:
 
         #For every import interval, import a new file into NDVI_next and redefine NDVI_interpolated to hold the old values of NDVI_next
@@ -234,6 +236,12 @@ for i in range (0,n_runs):
 
         #Update system state according to current interpolated NDVI values and corresponding BOltzmann factors.
         system_update(t,i)
+
+        if int(t%update_interval) == 0:
+            #Output data to storage array at every output interval
+            output_data_store[t,n*3+1] = goose_position[0]
+            output_data_store[t,n*3+2] = goose_position[1]
+            output_data_store[t,n*3+3] = r_i_array[goose_position[0],goose_position[1]]
 
         #Find possible states for next run of system
         find_possible_states()
@@ -244,7 +252,7 @@ for i in range (0,n_runs):
         #Update Boltzmann factors according to the new interpolated NDVI values
         boltzmann_update(possible_states)
 
-        t=
+        t = t + 1#*distancefromstep*
 
 #Write stored data array to file
 np.savetxt(run_folder+'/goose_positions.txt', output_data_store, delimiter='  ')
