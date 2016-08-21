@@ -240,8 +240,8 @@ for i in range (0,n_runs):
             #Output data to storage array at every output interval
             output_data_store[timetesttuple[0],i*4]   = t
             output_data_store[timetesttuple[0],i*4+1] = goose_position[0]
-            output_data_store[timetesttuple[0],i*3+2] = goose_position[1]
-            output_data_store[timetesttuple[0],i*3+3] = r_i_array[goose_position[0],goose_position[1]]
+            output_data_store[timetesttuple[0],i*4+2] = goose_position[1]
+            output_data_store[timetesttuple[0],i*4+3] = r_i_array[goose_position[0],goose_position[1]]
 
         t = t + 1#*distancefromstep*
 
@@ -301,7 +301,7 @@ pyplot.savefig(os.path.join(run_folder,'distance.pdf'))
 #Plot paths
 pyplot.figure(2)
 for i in range(0,n_runs):
-    pyplot.plot(output_data_store[:,3*i+2], output_data_store[:,3*i+1])
+    pyplot.plot(output_data_store[:,4*i+2], output_data_store[:,4*i+1])
 pyplot.axis([0,2000,700,0])
 pyplot.xlabel('Longitude')
 pyplot.ylabel('Latitude')
