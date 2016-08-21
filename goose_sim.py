@@ -36,8 +36,6 @@ output_interval = t_max/n_output #output_interval ~ 1 hour
 
 #Create array to store data from all runs
 output_data_store = np.empty((t_max,(n_runs*4)))
-for i in range(0,t_max):
-    output_data_store[i,0] = i
 
 #Create date and time labelled folder to store the data from this run
 #First ensure the output_data folder exists
@@ -77,12 +75,12 @@ infile.close()
 
 #Use number of columns and rows to define the shape arrays needed later, which must have the same shape as the NDVI data array.
 #These are the boltzmann_factors array, array of distances from breeding ground, NDVI_interpolated array and NDVI_gradient array for interpolating.
-boltzmann_factors = np.zeros((nrows-1,ncols-1))
-r_i_array         = np.zeros((nrows-1,ncols-1))
+boltzmann_factors = np.zeros((nrows-1,ncols-1),dtype=float)
+r_i_array         = np.zeros((nrows-1,ncols-1),dtype=float)
 NDVI_gradient     = np.empty((nrows-1,ncols-1),dtype=float)
 NDVI_interpolated = np.empty((nrows-1,ncols-1),dtype=float)
 NDVI_next         = np.empty((nrows-1,ncols-1),dtype=int)
-time_updated      = np.zeros((nrows-1,ncols-1),dtype=int)
+time_updated      = np.zeros((nrows-1,ncols-1),dtype=float)
 
 #Fill r_i_array with distances from breeding site.
 for x in range(0,nrows-1):
@@ -193,7 +191,10 @@ def importnext(t):
     NDVI_gradient = (NDVI_next-NDVI_interpolated)/update_interval
     print (t, filenameatinterval)
     #Change the value of the time the element was last updated for every element of the array.
+
+    ############################################################
     time_updated.fill(t-1)
+    ############################################################
 
 #Function to interpolate NDVI data between two files
 def interpolate(possible_states,t):
@@ -205,7 +206,9 @@ def interpolate(possible_states,t):
     for element in possible_states:
         NDVI_interpolated[element] = NDVI_interpolated[element] + (t-time_updated[element])*NDVI_gradient[x,y] #(t-time_updated[element]) gives the time that has elapsed since that component of the array was last interpolated, and therefore the magnitude of the prefactor required when adding some multiple of the gradient
         #Element updated, so set the time_updated to the current time t.
+        ############################################################
         time_updated[element] = t
+        ############################################################
 
 for i in range (0,n_runs):
     print('run '+str(i))
@@ -237,11 +240,13 @@ for i in range (0,n_runs):
         #Update system state according to current interpolated NDVI values and corresponding BOltzmann factors.
         system_update(t,i)
 
-        if int(t%update_interval) == 0:
+        timetesttuple = divmod(t,update_interval)
+        if int(timetesttuple[1]) == 0:
             #Output data to storage array at every output interval
-            output_data_store[t,n*3+1] = goose_position[0]
-            output_data_store[t,n*3+2] = goose_position[1]
-            output_data_store[t,n*3+3] = r_i_array[goose_position[0],goose_position[1]]
+            output_data_store[timetesttuple[0],n*4]   = t
+            output_data_store[timetesttuple[0],n*4+1] = goose_position[0]
+            output_data_store[timetesttuple[0],n*3+2] = goose_position[1]
+            output_data_store[timetesttuple[0],n*3+3] = r_i_array[goose_position[0],goose_position[1]]
 
         #Find possible states for next run of system
         find_possible_states()
