@@ -2,7 +2,7 @@
 from sys import argv
 import numpy as np
 import random
-from math import exp
+from math import exp, acos, sin, cos
 import os
 import time
 import matplotlib.pyplot as pyplot
@@ -13,11 +13,20 @@ importfolderpath = argv[1]
 #Set system parameters
 A       = int(argv[2]) # Prefactor for breeding site gravitational attraction. Given at command line. ~10^5
 kT      = int(argv[3]) # Measure of goose temperature or "restlessness". Given at command line. ~10^3
-n_runs  = 10            # Number of runs with this set of parameters. Program will produce an average and standard deviation over all runs.
+n_runs  = 2            # Number of runs with this set of parameters. Program will produce an average and standard deviation over all runs.
 n_output= 1000         # Number of data outputs to file
 #Define position of breeding ground and initial position of goose
 breeding_position = (279,1147)
 goose_position    = (495,560)
+goose_speed       = 64.4    #Average flight speed of geese in km/h
+
+#Add some parameters of the NDVI grid
+d_latlong         = 0.072727270424 #Change in latitude and longitude values between neighbouring lattice points. Same value for latitude and longitude.
+origin_position   = (89.186550763788,-34.577507148323) #(latitude,longitude) value for lattice point (0,0)
+radius_earth      = 6371 #Radius of the earth in km. (assumed spherical for simplicity)
+
+#Latitude and longitude position of the breeding ground
+breeding_latlong = (origin_position[0]+breeding_position[0]*d_latlong,origin_position[1]+breeding_position[1]*d_latlong)
 
 #From folder path provided at command line, find list of files to import NDVI data from.
 #Each file corresponds to half a month. "isfile" checks that we find only files, not directories.
@@ -85,10 +94,12 @@ time_updated      = np.zeros((nrows-1,ncols-1),dtype=float)
 #Fill r_i_array with distances from breeding site.
 for x in range(0,nrows-1):
     for y in range(0,ncols-1):
-        #Define distance of (x,y) from breeding position
-        r_i_vector = [(breeding_position[0]-x),(breeding_position[1]-y)]
-        r_i        = (np.vdot(r_i_vector,r_i_vector))**0.5+0.1
-        r_i_array[x,y] = r_i
+        #Calculate distance of (x,y) from breeding position
+        latlongxy      = (origin_position[0]+x*d_latlong, origin_position[1]+y*d_latlong) #(latitude,longitude) position of the element in question
+        delta_long     = breeding_latlong[1]-latlongxy[1]
+        term1          = sin(latlongxy[0])*sin(breeding_latlong[0])
+        term2          = cos(latlongxy[0])*cos(breeding_latlong[0])*cos(delta_long)
+        r_i_array[x,y] = radius_earth*acos(term1 + term2)
 
 #Import initial NDVI file
 initialfilename = importfolderpath+'/'+datafiles.pop(0)
@@ -104,6 +115,19 @@ for x in range(0,nrows-1):
 #Define array of possible lattice points that the bird can be in at the next timestep.
 #Generally has 9 components, but can have fewer at the edges of the system.
 possible_states = []
+
+
+#Define function to calculate the real distance between two given lattice points
+def realdistance(a,b):
+    latlonga       = (origin_position[0]+a[0]*d_latlong, origin_position[1]+a[1]*d_latlong) #(latitude,longitude) position of lattice point a
+    latlongb       = (origin_position[0]+b[0]*d_latlong, origin_position[1]+b[1]*d_latlong) #(latitude,longitude) position of lattice point b
+    delta_long     = latlongb[1]-latlonga[1]
+    #Sum of sines and cosines in distance formula sometimes rounds to over 1, typically 1.0000000000000002, which causes problems for the acos function, so we include a term to ensure such rounding errors are corrected to 1.0
+    if sin(latlonga[0])*sin(latlongb[0])+cos(latlonga[0])*cos(latlongb[0])*cos(delta_long) > 1.0:
+        dist = radius_earth*acos(1.0)
+    else:
+        dist = radius_earth*acos(sin(latlonga[0])*sin(latlongb[0])+cos(latlonga[0])*cos(latlongb[0])*cos(delta_long))
+    return dist
 
 #Define subroutine to find the set of possible lattice points that the bird can be in at the next timestep.
 def find_possible_states():
@@ -143,7 +167,7 @@ def boltzmann_update(possible_states):
             boltzmann_factors[element] = exp(potential)
 
 #Define subroutine to update the position of the goose
-def system_update(t,n):
+def system_update(t):
     global boltzmann_factors
     global goose_position
     global possible_states
@@ -209,6 +233,7 @@ for i in range (0,n_runs):
     print('run '+str(i))
     #Reset system for each new run
     goose_position    = (495,560)
+    prev_goose_position = goose_position
     datafiles = [f for f in os.listdir(importfolderpath) if os.path.isfile(os.path.join(importfolderpath, f)) and f[-1]=='t']
     datafiles.sort()
     NDVI_import = np.genfromtxt(initialfilename, dtype=str, skip_header=1, usecols=range(1,ncols), delimiter=' ')
@@ -233,7 +258,9 @@ for i in range (0,n_runs):
             importnext(t)
             counter = counter + 1
         #Update system state according to current interpolated NDVI values and corresponding BOltzmann factors.
-        system_update(t,i)
+        prev_goose_position = goose_position #Store the previous goose position before updating
+        system_update(t)
+        print(goose_position)
         timetesttuple = divmod(t,output_interval)
         if int(timetesttuple[1]) == 0:
             #Output data to storage array at every output interval
@@ -241,13 +268,18 @@ for i in range (0,n_runs):
             output_data_store[int(timetesttuple[0]),i*4+1] = goose_position[0]
             output_data_store[int(timetesttuple[0]),i*4+2] = goose_position[1]
             output_data_store[int(timetesttuple[0]),i*4+3] = r_i_array[goose_position[0],goose_position[1]]
-        t = t + 0.01#*distancefromstep*
+
+        distance_travelled = realdistance(goose_position,prev_goose_position)
+        print(distance_travelled)
+        t = t + distance_travelled/goose_speed #Time taken for the bird to travel this distance between lattice points.
         #Find possible states for next run of system
         find_possible_states()
         #Update the interpolated NDVI array
         interpolate(possible_states,t)
         #Update Boltzmann factors according to the new interpolated NDVI values
         boltzmann_update(possible_states)
+
+print(output_data_store)
 
 #Write stored data array to file
 np.savetxt(run_folder+'/goose_positions.txt', output_data_store, delimiter='  ')
@@ -295,7 +327,7 @@ pyplot.savefig(os.path.join(run_folder,'distance.pdf'))
 pyplot.figure(2)
 for i in range(0,n_runs):
     pyplot.plot(output_data_store[:,4*i+2], output_data_store[:,4*i+1])
-pyplot.axis([0,2000,700,0])
+pyplot.axis([0,2000,699,0])
 pyplot.xlabel('Longitude')
 pyplot.ylabel('Latitude')
 pyplot.title('Simulated paths of geese')
@@ -304,7 +336,7 @@ pyplot.savefig(os.path.join(run_folder,'path.pdf'))
 #Plot centre of mass path (centre of mass of positions of all runs at each timepoint)
 pyplot.figure(3)
 pyplot.plot(COM_array[:,1], COM_array[:,0])
-pyplot.axis([0,2000,700,0])
+pyplot.axis([0,2000,699,0])
 pyplot.xlabel('Longitude')
 pyplot.ylabel('Latitude')
 pyplot.title('Centre of mass at each timepoint of several simulation runs')
