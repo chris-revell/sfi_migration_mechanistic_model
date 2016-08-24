@@ -1,5 +1,5 @@
 
-from sys import argv
+from sys import argv,exit
 import numpy as np
 import random
 from math import exp, acos, sin, cos, pi
@@ -7,18 +7,21 @@ import os
 import time
 import matplotlib.pyplot as pyplot
 
+if len(argv) != 4:
+    exit("Please provide 3 arguments: folder path of NDVI data, value of A, value of kT")
+
 #Folder path for datafile given at command line
 importfolderpath = argv[1]
 
 #Set system parameters
-A       = int(argv[2]) # Prefactor for breeding site gravitational attraction. Given at command line. ~10^5
-kT      = int(argv[3]) # Measure of goose temperature or "restlessness". Given at command line. ~10^3
+A       = float(argv[2]) # Prefactor for breeding site gravitational attraction. Given at command line. ~10^5
+kT      = float(argv[3]) # Measure of goose temperature or "restlessness". Given at command line. ~10^3
 n_runs  = 5            # Number of runs with this set of parameters. Program will produce an average and standard deviation over all runs.
 n_output= 1000         # Number of data outputs to file
 #Define position of breeding ground and initial position of goose
-breeding_position = (279,1147)
+breeding_position = (275,1424)#(279,1147)
 goose_position    = (495,560)
-goose_speed       = 64.4    #Average flight speed of geese in km/h
+goose_speed       = 112#64.4    #Average flight speed of geese in km/h
 
 #Add some parameters of the NDVI grid
 d_latlong         = 0.072727270424 #Change in latitude and longitude values between neighbouring lattice points. Same value for latitude and longitude.
@@ -154,6 +157,7 @@ def find_possible_states():
 #Define functional form of breeding site gravity potential
 def breeding_gravity(radius):
     return (A/radius)
+    #return (-1.0*A*radius)
 
 #Subroutine to update the boltzmann factors for the possible states in the next timestep after the NDVI values of these states have been interpolated.
 def boltzmann_update(possible_states):
@@ -316,7 +320,7 @@ np.savetxt(run_folder+'/COM_path.txt', COM_array, delimiter='  ')
 pyplot.figure(1)
 pyplot.plot(mean_list)
 pyplot.fill_between(time_list,(mean_list+std_dev_list),(mean_list-std_dev_list), alpha=0.5)
-pyplot.axis([0,n_output,0,700])
+pyplot.axis([0,n_output,0,3000])
 pyplot.xlabel('Time')
 pyplot.ylabel('Distance from breeding ground')
 pyplot.title('Distance from breeding ground against time')
