@@ -2,7 +2,7 @@
 from sys import argv
 import numpy as np
 import random
-from math import exp, acos, sin, cos
+from math import exp, acos, sin, cos, pi
 import os
 import time
 import matplotlib.pyplot as pyplot
@@ -13,7 +13,7 @@ importfolderpath = argv[1]
 #Set system parameters
 A       = int(argv[2]) # Prefactor for breeding site gravitational attraction. Given at command line. ~10^5
 kT      = int(argv[3]) # Measure of goose temperature or "restlessness". Given at command line. ~10^3
-n_runs  = 2            # Number of runs with this set of parameters. Program will produce an average and standard deviation over all runs.
+n_runs  = 5            # Number of runs with this set of parameters. Program will produce an average and standard deviation over all runs.
 n_output= 1000         # Number of data outputs to file
 #Define position of breeding ground and initial position of goose
 breeding_position = (279,1147)
@@ -26,7 +26,7 @@ origin_position   = (89.186550763788,-34.577507148323) #(latitude,longitude) val
 radius_earth      = 6371 #Radius of the earth in km. (assumed spherical for simplicity)
 
 #Latitude and longitude position of the breeding ground
-breeding_latlong = (origin_position[0]+breeding_position[0]*d_latlong,origin_position[1]+breeding_position[1]*d_latlong)
+breeding_latlong = (origin_position[0]-breeding_position[0]*d_latlong,origin_position[1]+breeding_position[1]*d_latlong)
 
 #From folder path provided at command line, find list of files to import NDVI data from.
 #Each file corresponds to half a month. "isfile" checks that we find only files, not directories.
@@ -95,10 +95,11 @@ time_updated      = np.zeros((nrows-1,ncols-1),dtype=float)
 for x in range(0,nrows-1):
     for y in range(0,ncols-1):
         #Calculate distance of (x,y) from breeding position
-        latlongxy      = (origin_position[0]+x*d_latlong, origin_position[1]+y*d_latlong) #(latitude,longitude) position of the element in question
-        delta_long     = breeding_latlong[1]-latlongxy[1]
-        term1          = sin(latlongxy[0])*sin(breeding_latlong[0])
-        term2          = cos(latlongxy[0])*cos(breeding_latlong[0])*cos(delta_long)
+        #Remembering to convert latitude and longitude values to radians for use in trigonometric functions
+        latlongxy      = (pi*(origin_position[0]-x*d_latlong)/180, pi*(origin_position[1]+y*d_latlong)/180) #(latitude,longitude) position of the element in question, converted to radians for use in trigonometric functions
+        delta_long     = pi*breeding_latlong[1]/180-latlongxy[1]
+        term1          = sin(latlongxy[0])*sin(pi*breeding_latlong[0]/180)
+        term2          = cos(latlongxy[0])*cos(pi*breeding_latlong[0]/180)*cos(delta_long)
         r_i_array[x,y] = radius_earth*acos(term1 + term2)
 
 #Import initial NDVI file
@@ -119,14 +120,16 @@ possible_states = []
 
 #Define function to calculate the real distance between two given lattice points
 def realdistance(a,b):
-    latlonga       = (origin_position[0]+a[0]*d_latlong, origin_position[1]+a[1]*d_latlong) #(latitude,longitude) position of lattice point a
-    latlongb       = (origin_position[0]+b[0]*d_latlong, origin_position[1]+b[1]*d_latlong) #(latitude,longitude) position of lattice point b
+    latlonga       = (pi*(origin_position[0]-a[0]*d_latlong)/180, pi*(origin_position[1]+a[1]*d_latlong)/180) #(latitude,longitude) position of lattice point a, in radians
+    latlongb       = (pi*(origin_position[0]-b[0]*d_latlong)/180, pi*(origin_position[1]+b[1]*d_latlong)/180) #(latitude,longitude) position of lattice point b, in radians
     delta_long     = latlongb[1]-latlonga[1]
-    #Sum of sines and cosines in distance formula sometimes rounds to over 1, typically 1.0000000000000002, which causes problems for the acos function, so we include a term to ensure such rounding errors are corrected to 1.0
-    if sin(latlonga[0])*sin(latlongb[0])+cos(latlonga[0])*cos(latlongb[0])*cos(delta_long) > 1.0:
-        dist = radius_earth*acos(1.0)
+    term1          = sin(latlonga[0])*sin(latlongb[0])
+    term2          = cos(latlonga[0])*cos(latlongb[0])*cos(delta_long)
+    #When the bird doesn't move, and latlonga = latlongb, small rounding errors can lead to taking the arccos of a number a tiny bit higher than 1, eg 1.0000000000000002, so it's safer to set the distance equal to 0 in this case rather than doing the full calculation
+    if latlonga == latlongb:
+        dist = 0.0
     else:
-        dist = radius_earth*acos(sin(latlonga[0])*sin(latlongb[0])+cos(latlonga[0])*cos(latlongb[0])*cos(delta_long))
+        dist = radius_earth*acos(term1+term2)
     return dist
 
 #Define subroutine to find the set of possible lattice points that the bird can be in at the next timestep.
@@ -260,7 +263,6 @@ for i in range (0,n_runs):
         #Update system state according to current interpolated NDVI values and corresponding BOltzmann factors.
         prev_goose_position = goose_position #Store the previous goose position before updating
         system_update(t)
-        print(goose_position)
         timetesttuple = divmod(t,output_interval)
         if int(timetesttuple[1]) == 0:
             #Output data to storage array at every output interval
@@ -270,7 +272,6 @@ for i in range (0,n_runs):
             output_data_store[int(timetesttuple[0]),i*4+3] = r_i_array[goose_position[0],goose_position[1]]
 
         distance_travelled = realdistance(goose_position,prev_goose_position)
-        print(distance_travelled)
         t = t + distance_travelled/goose_speed #Time taken for the bird to travel this distance between lattice points.
         #Find possible states for next run of system
         find_possible_states()
@@ -279,7 +280,6 @@ for i in range (0,n_runs):
         #Update Boltzmann factors according to the new interpolated NDVI values
         boltzmann_update(possible_states)
 
-print(output_data_store)
 
 #Write stored data array to file
 np.savetxt(run_folder+'/goose_positions.txt', output_data_store, delimiter='  ')
