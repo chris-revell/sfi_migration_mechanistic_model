@@ -16,11 +16,11 @@ importfolderpath = argv[1]
 #Set system parameters
 A       = float(argv[2]) # Prefactor for breeding site gravitational attraction. Given at command line. ~10^5
 kT      = float(argv[3]) # Measure of goose temperature or "restlessness". Given at command line. ~10^3
-n_runs  = 5            # Number of runs with this set of parameters. Program will produce an average and standard deviation over all runs.
+n_runs  = 2            # Number of runs with this set of parameters. Program will produce an average and standard deviation over all runs.
 n_output= 1000         # Number of data outputs to file
 #Define position of breeding ground and initial position of goose
-breeding_position = (275,1424)#(279,1147)
-goose_position    = (495,560)
+breeding_position = (279,1147)#(275,1424)
+initialgoose_position    = (495,560)
 goose_speed       = 112#64.4    #Average flight speed of geese in km/h
 
 #Add some parameters of the NDVI grid
@@ -61,7 +61,7 @@ os.mkdir(run_folder)
 #Write initial conditions to file
 #Wintering position and breeding position
 winterbreedingpositionfile = open(run_folder+'/winterbreedingposition.txt','w')
-winterbreedingpositionfile.write(str(goose_position[0])+' '+str(goose_position[1])+'\n'+str(breeding_position[0])+' '+str(breeding_position[1]))
+winterbreedingpositionfile.write(str(initialgoose_position[0])+' '+str(initialgoose_position[1])+'\n'+str(breeding_position[0])+' '+str(breeding_position[1]))
 winterbreedingpositionfile.close()
 #Write simulation parameters to data file
 parameterfile = open(run_folder+'/parameters.txt','w')
@@ -156,8 +156,8 @@ def find_possible_states():
 
 #Define functional form of breeding site gravity potential
 def breeding_gravity(radius):
-    return (A/radius)
-    #return (-1.0*A*radius)
+    #return (A/radius)
+    return (-1.0*A*radius)
 
 #Subroutine to update the boltzmann factors for the possible states in the next timestep after the NDVI values of these states have been interpolated.
 def boltzmann_update(possible_states):
@@ -239,7 +239,7 @@ def interpolate(possible_states,t):
 for i in range (0,n_runs):
     print('run '+str(i))
     #Reset system for each new run
-    goose_position    = (495,560)
+    goose_position = initialgoose_position
     prev_goose_position = goose_position
     datafiles = [f for f in os.listdir(importfolderpath) if os.path.isfile(os.path.join(importfolderpath, f)) and f[-1]=='t']
     datafiles.sort()
@@ -320,7 +320,7 @@ np.savetxt(run_folder+'/COM_path.txt', COM_array, delimiter='  ')
 pyplot.figure(1)
 pyplot.plot(mean_list)
 pyplot.fill_between(time_list,(mean_list+std_dev_list),(mean_list-std_dev_list), alpha=0.5)
-pyplot.axis([0,n_output,0,3000])
+pyplot.axis([0,n_output,0,4000])
 pyplot.xlabel('Time')
 pyplot.ylabel('Distance from breeding ground')
 pyplot.title('Distance from breeding ground against time')
@@ -331,6 +331,8 @@ pyplot.savefig(os.path.join(run_folder,'distance.pdf'))
 pyplot.figure(2)
 for i in range(0,n_runs):
     pyplot.plot(output_data_store[:,4*i+2], output_data_store[:,4*i+1])
+pyplot.plot(breeding_position[1],breeding_position[0],'kx',markersize=12)
+pyplot.plot(initialgoose_position[1],initialgoose_position[0],'kx',markersize=12)
 pyplot.axis([0,2000,699,0])
 pyplot.xlabel('Longitude')
 pyplot.ylabel('Latitude')
@@ -340,7 +342,8 @@ pyplot.savefig(os.path.join(run_folder,'path.pdf'))
 #Plot centre of mass path (centre of mass of positions of all runs at each timepoint)
 pyplot.figure(3)
 pyplot.plot(COM_array[:,1], COM_array[:,0])
-pyplot.axis([0,2000,699,0])
+pyplot.plot(breeding_position[1],breeding_position[0],'kx',markersize=12)
+pyplot.plot(initialgoose_position[1],initialgoose_position[0],'kx',markersize=12)pyplot.axis([0,2000,699,0])
 pyplot.xlabel('Longitude')
 pyplot.ylabel('Latitude')
 pyplot.title('Centre of mass at each timepoint of several simulation runs')
