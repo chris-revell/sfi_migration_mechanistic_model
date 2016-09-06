@@ -14,14 +14,14 @@ if len(argv) != 4:
 importfolderpath = argv[1]
 
 #Set system parameters
-A       = float(argv[2]) # Prefactor for breeding site gravitational attraction. Given at command line. ~10^5
-kT      = float(argv[3]) # Measure of goose temperature or "restlessness". Given at command line. ~10^3
-n_runs  = 2            # Number of runs with this set of parameters. Program will produce an average and standard deviation over all runs.
-n_output= 1000         # Number of data outputs to file
-#Define position of breeding ground and initial position of goose
-breeding_position = (279,1147)#(275,1424)
-initialgoose_position    = (495,560)
-goose_speed       = 112#64.4    #Average flight speed of geese in km/h
+A       = float(argv[2])# Prefactor for breeding site gravitational attraction. Given at command line. ~10^5
+kT      = float(argv[3])# Measure of bird temperature or "restlessness". Given at command line. ~10^3
+n_runs  = 2             # Number of runs with this set of parameters. Program will produce an average and standard deviation over all runs.
+n_output= 1000          # Number of data outputs to file
+#Define position of breeding ground and initial position of bird
+breeding_position    = (279,1147)
+initialbird_position = (495,560)
+bird_speed           = 64.4    #Average flight speed of birds in km/h
 
 #Add some parameters of the NDVI grid
 d_latlong         = 0.072727270424 #Change in latitude and longitude values between neighbouring lattice points. Same value for latitude and longitude.
@@ -61,7 +61,7 @@ os.mkdir(run_folder)
 #Write initial conditions to file
 #Wintering position and breeding position
 winterbreedingpositionfile = open(run_folder+'/winterbreedingposition.txt','w')
-winterbreedingpositionfile.write(str(initialgoose_position[0])+' '+str(initialgoose_position[1])+'\n'+str(breeding_position[0])+' '+str(breeding_position[1]))
+winterbreedingpositionfile.write(str(initialbird_position[0])+' '+str(initialbird_position[1])+'\n'+str(breeding_position[0])+' '+str(breeding_position[1]))
 winterbreedingpositionfile.close()
 #Write simulation parameters to data file
 parameterfile = open(run_folder+'/parameters.txt','w')
@@ -145,10 +145,10 @@ def find_possible_states():
     #Identify current neighbouring elements
     #Do not include values outside the bounds of the array
     for x in range(-1,2):
-        if 0 <= (goose_position[0]+x) < nrows-1:
+        if 0 <= (bird_position[0]+x) < nrows-1:
             for y in range(-1,2):
-                if 0 <= (goose_position[1]+y) < ncols-1 :
-                    possible_states.append((goose_position[0]+x,goose_position[1]+y))
+                if 0 <= (bird_position[1]+y) < ncols-1 :
+                    possible_states.append((bird_position[0]+x,bird_position[1]+y))
                 else:
                     pass
         else:
@@ -173,10 +173,10 @@ def boltzmann_update(possible_states):
             potential = (float(NDVI_interpolated[element]) + breeding_gravity(r_i_array[element]))/kT
             boltzmann_factors[element] = exp(potential)
 
-#Define subroutine to update the position of the goose
+#Define subroutine to update the position of the bird
 def system_update(t):
     global boltzmann_factors
-    global goose_position
+    global bird_position
     global possible_states
     global output_data_store
 
@@ -186,13 +186,13 @@ def system_update(t):
         boltzmann_sum = boltzmann_sum+boltzmann_factors[z]
 
     #Use a random number generator and probabilities defined by Boltzmann factors
-    #to decide which lattice point the goose moves to next
+    #to decide which lattice point the bird moves to next
     probability_sum = 0
     random_number = boltzmann_sum*random.random()
     for p in possible_states:
         probability_sum = probability_sum + boltzmann_factors[p[0],p[1]]
         if random_number < probability_sum:
-            goose_position = [p[0],p[1]]
+            bird_position = [p[0],p[1]]
             break
         else:
             pass
@@ -239,8 +239,8 @@ def interpolate(possible_states,t):
 for i in range (0,n_runs):
     print('run '+str(i))
     #Reset system for each new run
-    goose_position = initialgoose_position
-    prev_goose_position = goose_position
+    bird_position = initialbird_position
+    prev_bird_position = bird_position
     datafiles = [f for f in os.listdir(importfolderpath) if os.path.isfile(os.path.join(importfolderpath, f)) and f[-1]=='t']
     datafiles.sort()
     NDVI_import = np.genfromtxt(initialfilename, dtype=str, skip_header=1, usecols=range(1,ncols), delimiter=' ')
@@ -265,18 +265,18 @@ for i in range (0,n_runs):
             importnext(t)
             counter = counter + 1
         #Update system state according to current interpolated NDVI values and corresponding BOltzmann factors.
-        prev_goose_position = goose_position #Store the previous goose position before updating
+        prev_bird_position = bird_position #Store the previous bird position before updating
         system_update(t)
         timetesttuple = divmod(t,output_interval)
         if int(timetesttuple[1]) == 0:
             #Output data to storage array at every output interval
             output_data_store[int(timetesttuple[0]),i*4]   = t
-            output_data_store[int(timetesttuple[0]),i*4+1] = goose_position[0]
-            output_data_store[int(timetesttuple[0]),i*4+2] = goose_position[1]
-            output_data_store[int(timetesttuple[0]),i*4+3] = r_i_array[goose_position[0],goose_position[1]]
+            output_data_store[int(timetesttuple[0]),i*4+1] = bird_position[0]
+            output_data_store[int(timetesttuple[0]),i*4+2] = bird_position[1]
+            output_data_store[int(timetesttuple[0]),i*4+3] = r_i_array[bird_position[0],bird_position[1]]
 
-        distance_travelled = realdistance(goose_position,prev_goose_position)
-        t = t + distance_travelled/goose_speed #Time taken for the bird to travel this distance between lattice points.
+        distance_travelled = realdistance(bird_position,prev_bird_position)
+        t = t + distance_travelled/bird_speed #Time taken for the bird to travel this distance between lattice points.
         #Find possible states for next run of system
         find_possible_states()
         #Update the interpolated NDVI array
@@ -286,7 +286,7 @@ for i in range (0,n_runs):
 
 
 #Write stored data array to file
-np.savetxt(run_folder+'/goose_positions.txt', output_data_store, delimiter='  ')
+np.savetxt(run_folder+'/bird_positions.txt', output_data_store, delimiter='  ')
 outfile2 = open(run_folder+'/distance_average.txt','w')
 
 #Calculate mean and standard deviation of distance from breeding ground at all timepoints.
@@ -332,18 +332,18 @@ pyplot.figure(2)
 for i in range(0,n_runs):
     pyplot.plot(output_data_store[:,4*i+2], output_data_store[:,4*i+1])
 pyplot.plot(breeding_position[1],breeding_position[0],'kx',markersize=12)
-pyplot.plot(initialgoose_position[1],initialgoose_position[0],'kx',markersize=12)
+pyplot.plot(initialbird_position[1],initialbird_position[0],'kx',markersize=12)
 pyplot.axis([0,2000,699,0])
 pyplot.xlabel('Longitude')
 pyplot.ylabel('Latitude')
-pyplot.title('Simulated paths of geese')
+pyplot.title('Simulated paths of birds')
 pyplot.savefig(os.path.join(run_folder,'path.pdf'))
 
 #Plot centre of mass path (centre of mass of positions of all runs at each timepoint)
 pyplot.figure(3)
 pyplot.plot(COM_array[:,1], COM_array[:,0])
 pyplot.plot(breeding_position[1],breeding_position[0],'kx',markersize=12)
-pyplot.plot(initialgoose_position[1],initialgoose_position[0],'kx',markersize=12)
+pyplot.plot(initialbird_position[1],initialbird_position[0],'kx',markersize=12)
 pyplot.axis([0,2000,699,0])
 pyplot.xlabel('Longitude')
 pyplot.ylabel('Latitude')
