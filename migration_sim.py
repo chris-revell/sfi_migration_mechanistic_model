@@ -6,6 +6,7 @@ from math import exp, acos, sin, cos, pi
 import os
 import time
 import matplotlib.pyplot as pyplot
+from mpl_toolkits.basemap import Basemap
 
 if len(argv) != 3:
     exit("Please provide 2 arguments: folder path of environment data and the value of kT")
@@ -16,16 +17,16 @@ importfolderpath = argv[1]
 #Set system parameters
 #A       = float(argv[2])# Prefactor for breeding site gravitational attraction. Given at command line. ~10^5
 kT      = float(argv[2])# Measure of bird temperature or "restlessness". Given at command line. ~10^3
-n_runs  = 5             # Number of runs with this set of parameters. Program will produce an average and standard deviation over all runs.
+n_runs  = 1             # Number of runs with this set of parameters. Program will produce an average and standard deviation over all runs.
 n_output= 1000          # Number of data outputs to file
 #Define position of breeding ground and initial position of bird
 #breeding_position    = (279,1147)
-initialbird_position = (1500,0)
-bird_speed           = 100    #Average flight speed of birds in km/h
+initialbird_position = (1500,1800)
+bird_speed           = 200    #Average flight speed of birds in km/h
 
 #Add some parameters of the chlorophyll concentration lattice
-d_latlong         = 2*pi/3600 #Change in latitude and longitude values between neighbouring lattice points. Same value for latitude and longitude.
-origin_position   = (0,-pi)   #latitude,longitude values for lattice point (0,0)
+d_latlong         = 360/3600 #Change in latitude and longitude values between neighbouring lattice points. Same value for latitude and longitude.
+origin_position   = (90,-180)   #latitude,longitude values for lattice point (0,0)
 radius_earth      = 6371      #Radius of the earth in km (assumed spherical for simplicity)
 
 #From folder path provided at command line, find list of files to import chloro data from.
@@ -34,7 +35,7 @@ radius_earth      = 6371      #Radius of the earth in km (assumed spherical for 
 #Note that list will be ordered alphabetically, so alphabetical order of filenames must match temporal order of months.
 datafiles = [f for f in os.listdir(importfolderpath) if os.path.isfile(os.path.join(importfolderpath, f)) and f[-4:]=='.CSV']
 datafiles.sort()
-print(datafiles)
+#print(datafiles)
 
 #If each datafile is half a month, this corresponds to roughly 15 days per file, which is 360 hours.
 #Thus set the total run time in hours from the total number of input files minus 1, multiplied by 360.
@@ -212,8 +213,8 @@ for i in range (0,n_runs):
         if int(timetesttuple[1]) == 0:
             #Output data to storage array at every output interval
             output_data_store[int(timetesttuple[0]),i*3]   = t
-            output_data_store[int(timetesttuple[0]),i*3+1] = bird_position[0]
-            output_data_store[int(timetesttuple[0]),i*3+2] = bird_position[1]
+            output_data_store[int(timetesttuple[0]),i*3+1] = origin_position[0]-bird_position[0]*d_latlong
+            output_data_store[int(timetesttuple[0]),i*3+2] = bird_position[1]*d_latlong+origin_position[1]
 
         distance_travelled = realdistance(bird_position,prev_bird_position)
         if distance_travelled == 0:
@@ -243,22 +244,28 @@ np.savetxt(run_folder+'/COM_path.txt', COM_array, delimiter='  ')
 #Plot data with pyplot
 #Plot paths
 pyplot.figure(2)
+m = Basemap(projection="robin", lon_0=0)
+m.drawcoastlines()
+m.fillcontinents()
 for i in range(0,n_runs):
-    pyplot.plot(output_data_store[:,3*i+2], output_data_store[:,3*i+1])
+    x,y = m(output_data_store[:,3*i+2],output_data_store[:,3*i+1])
+    m.plot(x, y)
 #pyplot.plot(breeding_position[1],breeding_position[0],'kx',markersize=12)
-pyplot.plot(initialbird_position[1],initialbird_position[0],'kx',markersize=12)
+#m.plot(initialbird_position[1],initialbird_position[0],'kx',markersize=12)
+"""
 pyplot.axis([-arrayshape[1]/2,arrayshape[1]/2,arrayshape[0],0])
 pyplot.xlabel('Longitude')
 pyplot.ylabel('Latitude')
 pyplot.title('Simulated paths of birds')
+"""
 pyplot.savefig(os.path.join(run_folder,'path.pdf'))
 
 #Plot centre of mass path (centre of mass of positions of all runs at each timepoint)
 pyplot.figure(3)
 pyplot.plot(COM_array[:,1], COM_array[:,0])
 #pyplot.plot(breeding_position[1],breeding_position[0],'kx',markersize=12)
-pyplot.plot(initialbird_position[1],initialbird_position[0],'kx',markersize=12)
-pyplot.axis([-arrayshape[1]/2,arrayshape[1]/2,arrayshape[0],0])
+#pyplot.plot(initialbird_position[1],initialbird_position[0],'kx',markersize=12)
+#pyplot.axis([-arrayshape[1]/2,arrayshape[1]/2,arrayshape[0],0])
 pyplot.xlabel('Longitude')
 pyplot.ylabel('Latitude')
 pyplot.title('Centre of mass at each timepoint of several simulation runs')
