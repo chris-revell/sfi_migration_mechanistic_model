@@ -1,0 +1,95 @@
+library(maps)#
+library(mapdata)#
+library(raster)#
+library(sp)#
+library(rgdal)
+library(maps)#
+library(mapdata)#
+library(raster)#
+library(sp)#
+library(rgdal)#
+library(geosphere)#
+library(RCurl)
+data <- read.csv("/Users/mariussomveille/Desktop/CSSS/Tracking_animals/tracking goose data")#
+temp <- lapply(data$timestamp, function(x) as.numeric(unlist(strsplit(strsplit(as.character(x), " ")[[1]][1], "-"))))#
+data[,15:17] <- matrix(unlist(temp), ncol = 3, byrow = TRUE)#
+colnames(data)[15:17] <- c("year", "month", "day")#
+#
+bird <- unique(data$individual.local.identifier)
+b1 <- data[which(data$individual.local.identifier == bird[3] & data$migration.stage.standard == "spring-migration"),c(4,5,8,15,16,17)]#
+#
+#average.direction <- bearing(as.vector(b1[which(b1$migration.stage == "winter"),1:2]), as.vector(b1[which(b1$migration.stage == "breeding"), 1:2]))#
+#
+direction <- vector()#
+for(i in 1:length(b1[,1])){#
+	if(sum(b1[,1:2][i,]) != sum(b1[,1:2][i+1,]) & (b1$migration.stage[i] != "stopover" | b1$migration.stage[i+1] != "stopover")){#
+		direction[i] <- bearing(as.vector(b1[,1:2][i,]), as.vector(b1[,1:2][i+1,]))#
+	}else{#
+		direction[i] <- NA#
+	}	#
+}#
+mean(direction, na.rm=T)#
+sd(direction, na.rm=T)#
+hist(direction)
+day.of.year <- c(31,28,31,30,31,30,31,31,30,31,30,31)#
+starting.day = 0#
+for(i in 1:(b1$month[which(b1$migration.stage == "winter")]-1)){ #
+	starting.day = starting.day + day.of.year[i]#
+}#
+starting.day = starting.day + b1$day[which(b1$migration.stage == "winter")]#
+#
+time.step <- rep(0, length(b1[,1]))#
+for(j in 2:length(b1[,1])){ #
+	for(i in 1:(b1$month[j]-1)){ #
+		time.step[j] = time.step[j] + day.of.year[i]#
+	}#
+	time.step[j] = time.step[j] + b1$day[j]#
+	time.step[j] = time.step[j] - starting.day#
+}#
+#
+breeding.arrival.location <- b1[which(b1$migration.stage == "breeding"), 1:2] #
+distance_to_destination <- vector()#
+for(i in 1:length(b1[,1])){#
+	distance_to_destination[i] <- dist(rbind(as.vector(b1[,1:2][i,]), as.vector(breeding.arrival.location)))#
+}
+length(distance_to_destination)
+head(distance_to_destination)
+plot(time.step, distance_to_destination, pch=20)
+?density
+density(direction, adjust=1.5, kernel="gaussian")
+d1 <- density(direction, adjust=1.5, kernel="gaussian")
+length()
+length(direction)
+head(direction)
+direction
+d1 <- density(direction[which(is.na(direction)==F)], adjust=1.5, kernel="gaussian")
+hist(direction)
+plot(c(0,90), range(d1$y, d2$y), type = "n", xlab = "", ylab = "")#
+lines(d1, col = "red")
+plot(c(0,90), d1$y, type = "n", xlab = "", ylab = "")#
+lines(d1, col = "red")
+length(d1$y)
+head(d1$y)
+range(d1$y)
+plot(c(0,90), range(d1$y), type = "n", xlab = "", ylab = "")#
+lines(d1, col = "red")
+hist(direction[which(is.na(direction)==F)])
+plot(c(-180,180), range(d1$y), type = "n", xlab = "", ylab = "")#
+lines(d1, col = "red")
+mean(d1)
+length(d1)
+d1
+k1 <- ksmooth(time.step, distance_to_destination, kernel="normal", bandwith=0.5, range.x=range(time.step))
+k1 <- ksmooth(time.step, distance_to_destination, kernel="normal", bandwidth=0.5, range.x=range(time.step))
+plot(time.step, distance_to_destination, pch=20)
+lines(k1)
+k1 <- ksmooth(time.step, distance_to_destination, kernel="normal", bandwidth=2, range.x=range(time.step))
+lines(k1, col="red")
+length(k1)
+k1
+quartz()
+plot(time.step, direction, pch=20)
+length(direction)
+length(time.step)
+plot(time.step[1:375], direction, pch=20)
+plot(time.step[1:375], direction, pch=20, type="l")
