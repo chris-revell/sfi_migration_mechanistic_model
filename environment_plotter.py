@@ -1,4 +1,4 @@
-import matplotlib.pyplot as pyplot
+import matplotlib.pyplot as plt
 import numpy as np
 import os
 from sys import argv
@@ -21,13 +21,13 @@ for environmentfile in datafiles:
             else:
                 pass
     i=i+1
-    pyplot.figure(i)
-    pyplot.imshow(environment_array,cmap="BuGn")
+    plt.figure(i)
+    plt.imshow(environment_array,cmap="BuGn")
     outfilename = os.path.join(importfolderpath,environmentfile[0:-4]+".png")
-    pyplot.savefig(outfilename)
+    plt.savefig(outfilename)
     i=i+1
-    pyplot.figure(2)
+    plt.figure(2)
     flat_env = environment_array.flatten()
-    pyplot.hist(flat_env,100)
+    plt.hist(flat_env,100)
     outfilename = os.path.join(importfolderpath,environmentfile[0:-4]+"_hist.png")
-    pyplot.savefig(outfilename)
+    plt.savefig(outfilename)
