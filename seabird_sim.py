@@ -8,12 +8,12 @@ import time
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 
-datafiles = [os.path.join(argv[1],f) for f in os.listdir(argv[1])]
+datafiles = [os.path.join(argv[1],f) for f in os.listdir(argv[1]) if f[-4:].lower()==".csv"]
 
 currentposition = (500,720)
-kT = 2000
-t_max=500
-A = 20
+kT = 100
+t_max=200
+A = 1
 
 #Import ground map
 earth = np.genfromtxt(datafiles[0],delimiter=",")
@@ -31,7 +31,7 @@ resources = np.genfromtxt(datafiles[1],delimiter=",")
 resources_shape = np.shape(resources)
 
 #Import wind data
-wind_merid = np.genfromtxt(datafiles[2],delimiter=",",) #North to south wind speed
+wind_merid = np.genfromtxt(datafiles[2],delimiter=",") #North to south wind speed
 wind_zonal = np.genfromtxt(datafiles[3],delimiter=",") #West to east wind speed
 
 d_latlong = 180/resources_shape[0]
@@ -140,13 +140,24 @@ map.plot(x,y)
 plt.savefig(os.path.join(run_folder,"map.pdf"))
 
 fig2 = plt.figure()
-ax1 = fig2.add_subplot(211)
-ax1.imshow(resources_filtered,cmap="GnBu")
-ax1.plot(output_data_store[:,1],output_data_store[:,0])
+ax2 = fig2.add_subplot(211)
+cax = ax2.imshow(resources_filtered,cmap="GnBu")
+cbar = fig2.colorbar(cax)
+ax2.plot(output_data_store[:,1],output_data_store[:,0])
+ax2.tick_params(axis='both',which='both',bottom='off',top='off',labelbottom='off')
+ax2.set_xrange([0,resources_shape[1]])
+ax2.set_yrange([resources_shape[0],0])
+ax2.set_yrange
 fig2.savefig(os.path.join(run_folder,"lattice_chloro.pdf"))
 
 fig3 = plt.figure()
-ax1 = fig3.add_subplot(212)
-ax1.imshow(earth,cmap="Greys")
-ax1.plot(output_data_store[:,1],output_data_store[:,0])
+ax3 = fig3.add_subplot(212)
+ax3.imshow(earth,cmap="Greys")
+ax3.plot(output_data_store[:,1],output_data_store[:,0])
+ax3.tick_params(
+    axis='x',          # changes apply to the x-axis
+    which='both',      # both major and minor ticks are affected
+    bottom='off',      # ticks along the bottom edge are off
+    top='off',         # ticks along the top edge are off
+    labelbottom='off')
 fig3.savefig(os.path.join(run_folder,"lattice_earth.pdf"))
