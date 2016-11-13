@@ -12,8 +12,8 @@ datafiles = [os.path.join(argv[1],f) for f in os.listdir(argv[1]) if f[-4:].lowe
 
 currentposition = (500,720)
 kT = 100
-t_max=300
-A = 100
+t_max=500
+a = 0.1
 
 #Import ground map
 earth = np.genfromtxt(datafiles[0],delimiter=",")
@@ -55,11 +55,16 @@ def realdistance(a,b):
     #When the bird doesn't move, and latlonga = latlongb, small rounding errors can lead to taking the arccos of a number a tiny bit higher than 1, eg 1.0000000000000002, so it's safer to set the distance equal to 0 in this case rather than doing the full calculation
     if latlonga == latlongb:
         dist = 0.0
+    elif term1+term2 > 1:
+        dist = 6371*acos(1)
+    elif term1+term2 < -1:
+        dist = 6371*acos(-1)
     else:
-        try:
-            dist = 6371*acos(term1+term2) # 6371 is the radius of the earth in km (assuming spherical)
-        except Exception as e:
-            print(latlonga,latlongb,term1,term2)
+        dist = 6371*acos(term1+term2) # 6371 is the radius of the earth in km (assuming spherical)
+        #try:
+        #    dist = 6371*acos(term1+term2) # 6371 is the radius of the earth in km (assuming spherical)
+        #except Exception as e:
+        #    print(latlonga,latlongb,term1,term2)
     return dist
 
 
@@ -69,8 +74,7 @@ output_data_store[0,1] = currentposition[1]
 
 for t in range(1,t_max):
     print(t)
-    #Calculate potentials in new states
-    #Convert to Boltzmann factors
+    #Calculate potentials in new possible states and convert to Boltzmann factors
     possible_state_boltzmann_factors = np.zeros((3,3))
     for i in range(-1,2):
         for j in range(-1,2):
@@ -84,20 +88,15 @@ for t in range(1,t_max):
                 for k in range(0,resources_shape[0]):
                     for l in range(0,resources_shape[1]):
                         if earth[k,l] == 0 and resources_filtered[k,l] > 0:
-                            state_potential = state_potential + resources_filtered[k,l]/realdistance(state_index,currentposition)
+                            state_potential = state_potential + resources_filtered[k,l]/realdistance((k,l),currentposition)
 
                 wind_vector = np.array([wind_merid[currentposition],wind_zonal[currentposition]]) #In form [y,x] for ease of translation to np arrays.
                 wind_magnitude = sqrt(np.dot(wind_vector,wind_vector))
                 displacement_vector = np.array([i,j])
-                #print("currentposition",currentposition)
-                #print("wind_vector",wind_vector)
-                #print("wind_magnitude",wind_magnitude)
-                #print("displacement_vector",displacement_vector)
-                #print("np.dot(wind_vector,displacement_vector)",np.dot(wind_vector,displacement_vector))
-                state_potential = state_potential + A*wind_magnitude*np.dot(wind_vector,displacement_vector)
+                displacement_vector_magnitude = sqrt(np.dot(displacement_vector,displacement_vector))
+                state_potential = state_potential + a*wind_magnitude*np.dot(wind_vector,displacement_vector)
 
                 possible_state_boltzmann_factors[i+1,j+1] = exp(state_potential/kT)
-                #print(i,j,state_potential)
 
     #Update position
     #Sum Boltzmann factors for possible states
@@ -129,7 +128,7 @@ if os.path.exists("../output_data"):
     pass
 else:
     os.mkdir("../output_data")
-run_folder = os.path.join("../output_data/",time.strftime("%y%m%d%H%M")+"_A"+str(A))
+run_folder = os.path.join("../output_data/",time.strftime("%y%m%d%H%M")+"_a"+str(a))
 os.mkdir(run_folder)
 
 
@@ -145,7 +144,7 @@ plt.savefig(os.path.join(run_folder,"map.pdf"))
 
 fig2 = plt.figure()
 ax2 = fig2.add_subplot(211)
-cax = ax2.imshow(resources_filtered,cmap="BuGn")
+cax = ax2.imshow(resources_filtered,cmap="viridis")
 cbar = fig2.colorbar(cax)
 ax2.plot(output_data_store[:,1],output_data_store[:,0])
 ax2.tick_params(axis='x',which='both',bottom='off',top='off',labelbottom='off')
