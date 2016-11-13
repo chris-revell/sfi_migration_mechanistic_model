@@ -12,7 +12,7 @@ datafiles = [os.path.join(argv[1],f) for f in os.listdir(argv[1]) if f[-4:].lowe
 
 currentposition = (500,720)
 kT = 100
-t_max=500
+t_max=300
 A = 100
 
 #Import ground map
@@ -40,7 +40,7 @@ d_latlong = 180/resources_shape[0]
 resources_filtered = np.zeros(resources_shape)
 for i in range(0,resources_shape[0]):
     for j in range(0,resources_shape[1]):
-        if 99999 > resources[i,j] > 1:
+        if 99999 > resources[i,j] > 9:
             resources_filtered[i,j] = resources[i,j]
 
 output_data_store = np.zeros((t_max,2))
@@ -89,15 +89,15 @@ for t in range(1,t_max):
                 wind_vector = np.array([wind_merid[currentposition],wind_zonal[currentposition]]) #In form [y,x] for ease of translation to np arrays.
                 wind_magnitude = sqrt(np.dot(wind_vector,wind_vector))
                 displacement_vector = np.array([i,j])
-                print("currentposition",currentposition)
-                print("wind_vector",wind_vector)
-                print("wind_magnitude",wind_magnitude)
-                print("displacement_vector",displacement_vector)
-                print("np.dot(wind_vector,displacement_vector)",np.dot(wind_vector,displacement_vector))
+                #print("currentposition",currentposition)
+                #print("wind_vector",wind_vector)
+                #print("wind_magnitude",wind_magnitude)
+                #print("displacement_vector",displacement_vector)
+                #print("np.dot(wind_vector,displacement_vector)",np.dot(wind_vector,displacement_vector))
                 state_potential = state_potential + A*wind_magnitude*np.dot(wind_vector,displacement_vector)
 
                 possible_state_boltzmann_factors[i+1,j+1] = exp(state_potential/kT)
-                print(i,j,state_potential)
+                #print(i,j,state_potential)
 
     #Update position
     #Sum Boltzmann factors for possible states
@@ -145,19 +145,18 @@ plt.savefig(os.path.join(run_folder,"map.pdf"))
 
 fig2 = plt.figure()
 ax2 = fig2.add_subplot(211)
-cax = ax2.imshow(resources_filtered,cmap="GnBu")
+cax = ax2.imshow(resources_filtered,cmap="BuGn")
 cbar = fig2.colorbar(cax)
 ax2.plot(output_data_store[:,1],output_data_store[:,0])
-ax2.tick_params(axis='both',which='both',bottom='off',top='off',labelbottom='off')
+ax2.tick_params(axis='x',which='both',bottom='off',top='off',labelbottom='off')
+ax2.tick_params(axis='y',which='both',bottom='off',top='off',labelbottom='off')
 ax2.set_xlim([0,resources_shape[1]])
 ax2.set_ylim([resources_shape[0],0])
-fig2.savefig(os.path.join(run_folder,"lattice_chloro.pdf"))
-
-fig3 = plt.figure()
-ax3 = fig3.add_subplot(212)
+ax3 = fig2.add_subplot(212)
 ax3.imshow(earth,cmap="Greys")
 ax3.plot(output_data_store[:,1],output_data_store[:,0])
-ax3.tick_params(axis='both',which='both',bottom='off',top='off',labelbottom='off')
-ax2.set_xlim([0,resources_shape[1]])
-ax2.set_ylim([resources_shape[0],0])
-fig3.savefig(os.path.join(run_folder,"lattice_earth.pdf"))
+ax3.tick_params(axis='x',which='both',bottom='off',top='off',labelbottom='off')
+ax3.tick_params(axis='y',which='both',bottom='off',top='off',labelbottom='off')
+ax3.set_xlim([0,resources_shape[1]])
+ax3.set_ylim([resources_shape[0],0])
+fig2.savefig(os.path.join(run_folder,"lattice.pdf"))
