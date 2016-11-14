@@ -11,9 +11,9 @@ from mpl_toolkits.basemap import Basemap
 datafiles = [os.path.join(argv[1],f) for f in os.listdir(argv[1]) if f[-4:].lower()==".csv"]
 
 currentposition = (500,720)
-kT = 100
-t_max=500
-a = 0.1
+kT = 1
+t_max=800
+a = 0.01
 
 #Import ground map
 earth = np.genfromtxt(datafiles[0],delimiter=",")
@@ -40,7 +40,7 @@ d_latlong = 180/resources_shape[0]
 resources_filtered = np.zeros(resources_shape)
 for i in range(0,resources_shape[0]):
     for j in range(0,resources_shape[1]):
-        if 99999 > resources[i,j] > 9:
+        if 99999 > resources[i,j] > 5:
             resources_filtered[i,j] = resources[i,j]
 
 output_data_store = np.zeros((t_max,2))
@@ -94,7 +94,7 @@ for t in range(1,t_max):
                 wind_magnitude = sqrt(np.dot(wind_vector,wind_vector))
                 displacement_vector = np.array([i,j])
                 displacement_vector_magnitude = sqrt(np.dot(displacement_vector,displacement_vector))
-                state_potential = state_potential + a*wind_magnitude*np.dot(wind_vector,displacement_vector)
+                state_potential = state_potential + a*wind_magnitude*np.dot(wind_vector,displacement_vector)/displacement_vector_magnitude
 
                 possible_state_boltzmann_factors[i+1,j+1] = exp(state_potential/kT)
 
@@ -104,17 +104,20 @@ for t in range(1,t_max):
     for i in range(0,3):
         for j in range(0,3):
             boltzmann_sum = boltzmann_sum + possible_state_boltzmann_factors[i,j]
-
-    #Use a random number generator and probabilities defined by Boltzmann factors
-    #to decide which lattice point the bird moves to next
+    #Use a random number generator and probabilities defined by Boltzmann factors to decide which lattice point the bird moves to next
     probability_sum = 0
     random_number = boltzmann_sum*random()
+    #Use the moved variable to ensure that the bird can only move once, otherwise the loop below cannot be exited cleanly and the bird will be moved multiple times.
+    moved = 0
     for i in range(0,3):
         for j in range(0,3):
             probability_sum = probability_sum + possible_state_boltzmann_factors[i,j]
-            if random_number < probability_sum:
-                currentposition = (currentposition[0]+i-1,currentposition[1]+j-1) #tuple(map(sum, zip(currentposition, (i-1,j-1))))
-                break
+            if moved == 0:
+                if random_number < probability_sum:
+                    currentposition = (currentposition[0]+i-1,currentposition[1]+j-1) #tuple(map(sum, zip(currentposition, (i-1,j-1))))
+                    moved = 1
+                else:
+                    pass
             else:
                 pass
 
