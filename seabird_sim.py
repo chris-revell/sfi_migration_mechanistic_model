@@ -87,8 +87,8 @@ for t in range(1,t_max):
                 state_potential = 0
                 for k in range(0,resources_shape[0]):
                     for l in range(0,resources_shape[1]):
-                        if earth[k,l] == 0 and resources_filtered[k,l] > 0:
-                            state_potential = state_potential + resources_filtered[k,l]/realdistance((k,l),currentposition)
+                        if earth[k,l] == 0 and resources_filtered[k,l] > 0 and (k,l) != state_index:
+                            state_potential = state_potential + resources_filtered[k,l]/realdistance((k,l),state_index)
 
                 wind_vector = np.array([wind_merid[currentposition],wind_zonal[currentposition]]) #In form [y,x] for ease of translation to np arrays.
                 wind_magnitude = sqrt(np.dot(wind_vector,wind_vector))
