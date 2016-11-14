@@ -137,6 +137,7 @@ os.mkdir(run_folder)
 
 np.savetxt(os.path.join(run_folder,"positiondata.txt"),output_data_store)
 
+"""
 map = Basemap(projection="hammer",lon_0=0)
 map.fillcontinents()
 lats = (resources_shape[0]/2-output_data_store[:,0]-0.5)*d_latlong
@@ -144,21 +145,20 @@ lons = (output_data_store[:,1]+0.5-resources_shape[1]/2)*d_latlong
 x,y=map(lats,lons)
 map.plot(x,y)
 plt.savefig(os.path.join(run_folder,"map.pdf"))
+"""
 
 fig2 = plt.figure()
 ax2 = fig2.add_subplot(211)
 cax = ax2.imshow(resources_filtered,cmap="viridis")
 cbar = fig2.colorbar(cax)
 ax2.plot(output_data_store[:,1],output_data_store[:,0])
-ax2.tick_params(axis='x',which='both',bottom='off',top='off',labelbottom='off')
-ax2.tick_params(axis='y',which='both',bottom='off',top='off',labelbottom='off')
+ax2.tick_params(axis='both', which='both', bottom='off', top='off', labelbottom='off', right='off', left='off', labelleft='off')
 ax2.set_xlim([0,resources_shape[1]])
 ax2.set_ylim([resources_shape[0],0])
 ax3 = fig2.add_subplot(212)
 ax3.imshow(earth,cmap="Greys")
 ax3.plot(output_data_store[:,1],output_data_store[:,0])
-ax3.tick_params(axis='x',which='both',bottom='off',top='off',labelbottom='off')
-ax3.tick_params(axis='y',which='both',bottom='off',top='off',labelbottom='off')
+ax3.tick_params(axis='both', which='both', bottom='off', top='off', labelbottom='off', right='off', left='off', labelleft='off')
 ax3.set_xlim([0,resources_shape[1]])
 ax3.set_ylim([resources_shape[0],0])
 fig2.savefig(os.path.join(run_folder,"lattice.pdf"))
