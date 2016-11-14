@@ -10,7 +10,7 @@ from mpl_toolkits.basemap import Basemap
 
 datafiles = [os.path.join(argv[1],f) for f in os.listdir(argv[1]) if f[-4:].lower()==".csv"]
 
-currentposition = (500,720)
+currentposition = (600,1330)
 kT = 1
 t_max=800
 a = 0.01
@@ -78,7 +78,7 @@ for t in range(1,t_max):
     possible_state_boltzmann_factors = np.zeros((3,3))
     for i in range(-1,2):
         for j in range(-1,2):
-            state_index = ((currentposition[0]+i),(currentposition[1]+j))
+            state_index = ((currentposition[0]+i),(currentposition[1]+j)%resources_shape[1])
             if i == 0 and j == 0:
                 pass
             elif earth[state_index] == 1:
@@ -114,7 +114,7 @@ for t in range(1,t_max):
             probability_sum = probability_sum + possible_state_boltzmann_factors[i,j]
             if moved == 0:
                 if random_number < probability_sum:
-                    currentposition = (currentposition[0]+i-1,currentposition[1]+j-1) #tuple(map(sum, zip(currentposition, (i-1,j-1))))
+                    currentposition = (currentposition[0]+i-1,(currentposition[1]+j-1)%resources_shape[1]) # Use of mod % allows birds to move off one side of the grid and appear at the other. Ignore north and south poles for now because birds should never reach this point. 
                     moved = 1
                 else:
                     pass
