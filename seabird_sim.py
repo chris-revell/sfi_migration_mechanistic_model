@@ -10,10 +10,10 @@ from mpl_toolkits.basemap import Basemap
 
 datafiles = [os.path.join(argv[1],f) for f in os.listdir(argv[1]) if f[-4:].lower()==".csv"]
 
-currentposition = (600,1330)
+initialposition = (600,1330)
 kT = 1
-t_max=800
-a = 0.01
+t_max=1000
+a = 0.001
 
 #Import ground map
 earth = np.genfromtxt(datafiles[0],delimiter=",")
@@ -67,13 +67,13 @@ def realdistance(a,b):
         #    print(latlonga,latlongb,term1,term2)
     return dist
 
-
+currentposition = initialposition
 output_data_store[0,0] = currentposition[0]
 output_data_store[0,1] = currentposition[1]
-
+print(0, currentposition)
 
 for t in range(1,t_max):
-    print(t)
+
     #Calculate potentials in new possible states and convert to Boltzmann factors
     possible_state_boltzmann_factors = np.zeros((3,3))
     for i in range(-1,2):
@@ -114,19 +114,20 @@ for t in range(1,t_max):
             probability_sum = probability_sum + possible_state_boltzmann_factors[i,j]
             if moved == 0:
                 if random_number < probability_sum:
-                    currentposition = (currentposition[0]+i-1,(currentposition[1]+j-1)%resources_shape[1]) # Use of mod % allows birds to move off one side of the grid and appear at the other. Ignore north and south poles for now because birds should never reach this point. 
+                    currentposition = (currentposition[0]+i-1,(currentposition[1]+j-1)%resources_shape[1]) # Use of mod % allows birds to move off one side of the grid and appear at the other. Ignore north and south poles for now because birds should never reach this point.
                     moved = 1
                 else:
                     pass
             else:
                 pass
-
+    print(t,currentposition)
     output_data_store[t,0] = currentposition[0]
     output_data_store[t,1] = currentposition[1]
 
 
 #Output data
 
+#Create folder
 if os.path.exists("../output_data"):
     pass
 else:
@@ -134,19 +135,25 @@ else:
 run_folder = os.path.join("../output_data/",time.strftime("%y%m%d%H%M")+"_a"+str(a))
 os.mkdir(run_folder)
 
+#Save run parameters
+parameterfile = open(os.path.join(run_folder,"parameters.txt"),'w')
+parameterfile.write("a = "+str(a)+"\nkt = "+str(kT)+"\nt_max = "+str(t_max)+"\ninitialposition = "+str(initialposition))
+parameterfile.close()
 
+#Save position data
 np.savetxt(os.path.join(run_folder,"positiondata.txt"),output_data_store)
 
-"""
-map = Basemap(projection="hammer",lon_0=0)
-map.fillcontinents()
+#Create map of bird path on basemap
+map = Basemap(projection="robin",lon_0=0)
+map.fillcontinents(color='coral',lake_color='aqua')
+map.drawmapboundary(fill_color='aqua')
 lats = (resources_shape[0]/2-output_data_store[:,0]-0.5)*d_latlong
 lons = (output_data_store[:,1]+0.5-resources_shape[1]/2)*d_latlong
-x,y=map(lats,lons)
+x,y=map(lons,lats)
 map.plot(x,y)
 plt.savefig(os.path.join(run_folder,"map.pdf"))
-"""
 
+#Create plot of bird path on lattice
 fig2 = plt.figure()
 ax2 = fig2.add_subplot(211)
 cax = ax2.imshow(resources_filtered,cmap="viridis")
