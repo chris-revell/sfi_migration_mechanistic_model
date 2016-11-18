@@ -10,10 +10,10 @@ from mpl_toolkits.basemap import Basemap
 
 datafiles = [os.path.join(argv[1],f) for f in os.listdir(argv[1]) if f[-4:].lower()==".csv"]
 
-initialposition = (600,1330)
+initialposition = (576,573) #Position of South Georgia and the Sandwich Islands
 kT = 1
 t_max=1000
-a = 0.001
+a = 0.01
 
 #Import ground map
 earth = np.genfromtxt(datafiles[0],delimiter=",")
