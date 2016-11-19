@@ -1,23 +1,15 @@
 
 This is a Python3 program to run a mechanistic simulation of bird migration, devised by Marius Somveille and Christopher Revell at the Santa Fe Institute in June 2016.
 
-The program takes as input a set of NDVI data files. The folder containing these files should be passed to the program at the command line. The files should be .txt format, have alphabetical order identical to temporal order, and should be the only .txt files in the directory.
+The program imports lattices of chlorophyll density data and wind data. The chlorophyll data is filtered such that low density regions can be ignored. 
 
-The model has 3 parameters: the number of time steps and factors A and kT. These 3 parameters are defined within the first few lines of the code.  Value of t_max currently set to 60000. Values of A and kT given at command line. Appropriate values of A are of the order 10^7; appropriate values of kT are of the order 10^2-10^3.
+A bird is placed within the lattice and allowed to move to one of the eight surrounding lattice points. Each of these lattice points has a potential associated with it. This potential is defined by a combination of the chlorophyll and wind data. Each non-zero point in the cholorophyll concentration data produces a gravitational 1/r potential and all of these potentials contribute to the total value at each possible lattice point. The potential in each lattice is also weighted by the wind at the current location. The adjustment to the potential of each surrounding lattice point is given by |v|(u.v) where v is the wind vector at the current location and u is the unit vector from the current location towards the new lattice point in question. The relative contributions of the wind and chlorophyll components to the potential are set by parameter a. Once potentials, E, have been calculated for each of the 8 possible states, the probability that the bird will move into each state is defined by the Boltzmann factor of the state, e^(-E/kT) where kT is another parameter of the model, representing a form of energy or restlessness in the birds. Lattice points on solid ground are excluded from all calculations. 
 
-A starting position for the bird, and the location of the breeding site should also be defined within the code. Currently these are set as observed from tracking data of White-fronted Geese.
+This program is designed to be run in python3. Running in python2 will cause bugs. Matplotlib, mpl_toolkits.basemap and numpy must be installed for the program to run. 
 
-The simulation outputs data in a directory labelled by date and time of the run. Within this directory can be found a file containing the simulation parameters, a file containing the starting position and breeding location of the geese, and a file giving a time series of 2D goose positions and distance from breeding ground. The program also produces a set of gnuplot commands that will draw the data.
+Run the program by typing the following at the command line, where path is the location of the input data:
 
-It is possible to specify the number of times that the simulation should be run with a given set of parameters using n_run. The program outputs all data to the goose_positions file, with each run creating a new set of 3 columns. The program also calculates an average distance to the breeding ground for each timestep over all runs, and outputs to distance_average.txt.
-
-This program is designed to be run in python3. In python2, a bug arises that causes .pop(0) to be applied to an empty list. This is because python3 uses float division by default, whereas python2 uses integer division.
-
-matplotlib and numpy must be installed for the program to run. 
-
-Run the program by using the following command line command:
-
-python3 goose_sim.py <data/folder/path> <value_of_A> <value_of_kT>
+python3 seabird_sim.py <path>
 
 Link to Overleaf LaTeX document for this project:
 https://www.overleaf.com/5621453ctqmfc#/18190037/

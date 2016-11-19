@@ -12,7 +12,7 @@ datafiles = [os.path.join(argv[1],f) for f in os.listdir(argv[1]) if f[-4:].lowe
 
 initialposition = (576,573) #Position of South Georgia and the Sandwich Islands
 kT = 1
-t_max=1000
+t_max=3000
 a = 0.01
 
 #Import ground map
