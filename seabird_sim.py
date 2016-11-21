@@ -1,4 +1,4 @@
-
+#!/Library/Frameworks/Python.framework/Versions/3.5/bin/python3
 from sys import argv,exit
 import numpy as np
 from random import random
@@ -11,7 +11,7 @@ from mpl_toolkits.basemap import Basemap
 datafiles = [os.path.join(argv[1],f) for f in os.listdir(argv[1]) if f[-4:].lower()==".csv"]
 
 initialposition = (576,573) #Position of South Georgia and the Sandwich Islands
-kT = 1
+kT = 3
 t_max=3000
 a = 0.01
 
