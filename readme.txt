@@ -23,3 +23,4 @@ Things left to do:
   - Identify how to collect data.
     > Perform many runs and create heat maps of bird distribution at different time points?
     > Marius to identify relevant measurements from system that would be useful to ornithologists? 
+  - Relationship between bird velocity and wind speed?
