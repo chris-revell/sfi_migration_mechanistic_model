@@ -11,9 +11,10 @@ from mpl_toolkits.basemap import Basemap
 datafiles = [os.path.join(argv[1],f) for f in os.listdir(argv[1]) if f[-4:].lower()==".csv"]
 
 initialposition = (576,573) #Position of South Georgia and the Sandwich Islands
-kT = 3
+a = argv[1]
+kT = argv[2]
 t_max=3000
-a = 0.01
+
 
 #Import ground map
 earth = np.genfromtxt(datafiles[0],delimiter=",")
@@ -61,10 +62,6 @@ def realdistance(a,b):
         dist = 6371*acos(-1)
     else:
         dist = 6371*acos(term1+term2) # 6371 is the radius of the earth in km (assuming spherical)
-        #try:
-        #    dist = 6371*acos(term1+term2) # 6371 is the radius of the earth in km (assuming spherical)
-        #except Exception as e:
-        #    print(latlonga,latlongb,term1,term2)
     return dist
 
 currentposition = initialposition

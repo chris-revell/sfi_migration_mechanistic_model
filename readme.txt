@@ -7,9 +7,11 @@ A bird is placed within the lattice and allowed to move to one of the eight surr
 
 This program is designed to be run in python3. Running in python2 will cause bugs. Matplotlib, mpl_toolkits.basemap and numpy must be installed for the program to run.
 
-Run the program by typing the following at the command line, where path is the location of the input data:
+Run the program by typing the following at the command line, where path is the location of the input data and the 2nd and 3rd arguments are the values of parameters a and kT:
 
-python3 seabird_sim.py <path>
+python3 seabird_sim.py <path> a kT
+or,
+./seabird_sim.py <path> a kT
 
 Link to Overleaf LaTeX document for this project:
 https://www.overleaf.com/5621453ctqmfc#/18190037/
@@ -22,5 +24,4 @@ Things left to do:
   - Introduce penalty for change of direction?
   - Identify how to collect data.
     > Perform many runs and create heat maps of bird distribution at different time points?
-    > Marius to identify relevant measurements from system that would be useful to ornithologists? 
-  - Relationship between bird velocity and wind speed?
+    > Marius to identify relevant measurements from system that would be useful to ornithologists?
