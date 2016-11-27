@@ -5,46 +5,42 @@ from random import random
 from math import exp, acos, sin, cos, pi, radians, sqrt
 import os
 import time
-import matplotlib.pyplot as plt
-from mpl_toolkits.basemap import Basemap
+#import matplotlib.pyplot as plt
+#from mpl_toolkits.basemap import Basemap
 
-datafiles = [os.path.join(argv[1],f) for f in os.listdir(argv[1]) if f[-4:].lower()==".csv"]
+chloro_datafiles = [os.path.join("data_chloro",f) for f in os.listdir("data_chloro") if f[-4:].lower()==".csv"]
+wind_merid_datafiles = [os.path.join("data_wind",f) for f in os.listdir("data_wind") if f[-4:].lower()==".csv" and f[0]=="m"]
+wind_zonal_datafiles = [os.path.join("data_wind",f) for f in os.listdir("data_wind") if f[-4:].lower()==".csv" and f[0]=="z"]
 
 initialposition = (576,573) #Position of South Georgia and the Sandwich Islands
-a = argv[1]
-kT = argv[2]
-t_max=3000
+a = float(argv[1])
+kT = float(argv[2])
 
+if len(argv) > 3:
+    start_month = argv[3]
+else:
+    start_month = 1
+if len(argv) > 4:
+    end_month = argv[4]
+else:
+    end_month = 12
+
+t_max=(end_month-start_month+1)*30*24   #Number of hours in months specified
+
+bird_speed = 60
 
 #Import ground map
-earth = np.genfromtxt(datafiles[0],delimiter=",")
-earth_shape = np.shape(earth)
-for i in range(0,earth_shape[0]):
-    for j in range(0,earth_shape[1]):
+earth = np.genfromtxt("earth1440x720.CSV",delimiter=",")
+resources_shape = np.shape(earth)
+for i in range(0,resources_shape[0]):
+    for j in range(0,resources_shape[1]):
         if earth[i,j] == 99999:
             earth[i,j] = 0
         else:
             earth[i,j] = 1
 
 
-#Import chloro data
-resources = np.genfromtxt(datafiles[1],delimiter=",")
-resources_shape = np.shape(resources)
-
-#Import wind data
-wind_merid = np.genfromtxt(datafiles[2],delimiter=",") #North to south wind speed
-wind_zonal = np.genfromtxt(datafiles[3],delimiter=",") #West to east wind speed
-
 d_latlong = 180/resources_shape[0]
-
-#Threshold chloro data
-resources_filtered = np.zeros(resources_shape)
-for i in range(0,resources_shape[0]):
-    for j in range(0,resources_shape[1]):
-        if 99999 > resources[i,j] > 5:
-            resources_filtered[i,j] = resources[i,j]
-
-output_data_store = np.zeros((t_max,2))
 
 #Define function to calculate the real distance between two given lattice points
 def realdistance(a,b):
@@ -64,12 +60,47 @@ def realdistance(a,b):
         dist = 6371*acos(term1+term2) # 6371 is the radius of the earth in km (assuming spherical)
     return dist
 
+t=0
 currentposition = initialposition
-output_data_store[0,0] = currentposition[0]
-output_data_store[0,1] = currentposition[1]
-print(0, currentposition)
+#Create folder
+if os.path.exists("../output_data"):
+    pass
+else:
+    os.mkdir("../output_data")
+run_folder = os.path.join("../output_data/",time.strftime("%y%m%d%H%M")+"_a"+str(a))
+os.mkdir(run_folder)
+#Save run parameters
+parameterfile = open(os.path.join(run_folder,"parameters.txt"),'w')
+parameterfile.write("a = "+str(a)+"\nkt = "+str(kT)+"\nt_max = "+str(t_max)+"\ninitialposition = "+str(initialposition))
+parameterfile.write("\nstart_month = "+str(start_month)+"\nend_month = "+str(end_month)+"\nbird_speed = "+str(bird_speed))
+parameterfile.close()
+output_data_file = open(os.path.join(run_folder,"positiondata.csv"),'w')
+output_data_file.write(str(t)+","+str(currentposition[0])+","+str(currentposition[1])+"\n")
 
-for t in range(1,t_max):
+t=0.00001
+dt = 0.001
+previous_position = initialposition
+while t < t_max:
+
+    if t%720 < dt:
+        #Refresh data arrays every 720 hours (~1 month)
+        #Import chloro data
+        resources = np.genfromtxt(chloro_datafiles.pop(0),delimiter=",")
+        resources_shape = np.shape(resources)
+
+        #Threshold chloro data
+        resources_filtered = np.zeros(resources_shape)
+        for i in range(0,resources_shape[0]):
+            for j in range(0,resources_shape[1]):
+                if 99999 > resources[i,j] > 5:
+                    resources_filtered[i,j] = resources[i,j]
+
+        #Import wind data
+        wind_merid = np.genfromtxt(wind_merid_datafiles.pop(0),delimiter=",") #North to south wind speed
+        wind_zonal = np.genfromtxt(wind_zonal_datafiles.pop(0),delimiter=",") #West to east wind speed
+
+        refresh_timer = 0
+
 
     #Calculate potentials in new possible states and convert to Boltzmann factors
     possible_state_boltzmann_factors = np.zeros((3,3))
@@ -117,26 +148,17 @@ for t in range(1,t_max):
                     pass
             else:
                 pass
+
+    dt = realdistance(currentposition,previous_position)
+    t = t + dt/bird_speed
+
+
     print(t,currentposition)
-    output_data_store[t,0] = currentposition[0]
-    output_data_store[t,1] = currentposition[1]
+    output_data_file.write(str(t)+","+str(currentposition[0])+","+str(currentposition[1])+"\n")
 
 
-#Output data
 
-#Create folder
-if os.path.exists("../output_data"):
-    pass
-else:
-    os.mkdir("../output_data")
-run_folder = os.path.join("../output_data/",time.strftime("%y%m%d%H%M")+"_a"+str(a))
-os.mkdir(run_folder)
-
-#Save run parameters
-parameterfile = open(os.path.join(run_folder,"parameters.txt"),'w')
-parameterfile.write("a = "+str(a)+"\nkt = "+str(kT)+"\nt_max = "+str(t_max)+"\ninitialposition = "+str(initialposition))
-parameterfile.close()
-
+"""
 #Save position data
 np.savetxt(os.path.join(run_folder,"positiondata.txt"),output_data_store)
 
@@ -166,3 +188,4 @@ ax3.tick_params(axis='both', which='both', bottom='off', top='off', labelbottom=
 ax3.set_xlim([0,resources_shape[1]])
 ax3.set_ylim([resources_shape[0],0])
 fig2.savefig(os.path.join(run_folder,"lattice.pdf"))
+"""
