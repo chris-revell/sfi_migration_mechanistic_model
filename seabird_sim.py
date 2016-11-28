@@ -17,17 +17,24 @@ a = float(argv[1])
 kT = float(argv[2])
 
 if len(argv) > 3:
-    start_month = argv[3]
+    start_month = int(argv[3])
 else:
     start_month = 1
 if len(argv) > 4:
-    end_month = argv[4]
+    end_month = int(argv[4])
 else:
     end_month = 12
 
 t_max=(end_month-start_month+1)*30*24   #Number of hours in months specified
 
 bird_speed = 60
+
+chloro_datafiles[0:(start_month-1)] = []
+wind_merid_datafiles[0:(start_month-1)] = []
+wind_zonal_datafiles[0:(start_month-1)] = []
+chloro_datafiles[end_month:12] = []
+wind_merid_datafiles[end_month:12] = []
+wind_zonal_datafiles[end_month:12] = []
 
 #Import ground map
 earth = np.genfromtxt("earth1440x720.CSV",delimiter=",")
@@ -85,7 +92,9 @@ while t < t_max:
     if t%720 < dt:
         #Refresh data arrays every 720 hours (~1 month)
         #Import chloro data
-        resources = np.genfromtxt(chloro_datafiles.pop(0),delimiter=",")
+        chloro_filename = chloro_datafiles.pop(0)
+        print(chloro_filename)
+        resources = np.genfromtxt(chloro_filename,delimiter=",")
         resources_shape = np.shape(resources)
 
         #Threshold chloro data
@@ -96,8 +105,12 @@ while t < t_max:
                     resources_filtered[i,j] = resources[i,j]
 
         #Import wind data
-        wind_merid = np.genfromtxt(wind_merid_datafiles.pop(0),delimiter=",") #North to south wind speed
-        wind_zonal = np.genfromtxt(wind_zonal_datafiles.pop(0),delimiter=",") #West to east wind speed
+        merid_filename = wind_merid_datafiles.pop(0)
+        print(merid_filename)
+        wind_merid = np.genfromtxt(merid_filename,delimiter=",") #North to south wind speed
+        zonal_filename = wind_zonal_datafiles.pop(0)
+        print(zonal_filename)
+        wind_zonal = np.genfromtxt(zonal_filename,delimiter=",") #West to east wind speed
 
         refresh_timer = 0
 
@@ -149,9 +162,8 @@ while t < t_max:
             else:
                 pass
 
-    dt = realdistance(currentposition,previous_position)
-    t = t + dt/bird_speed
-
+    dt = realdistance(currentposition,previous_position)/bird_speed
+    t = t + dt
 
     print(t,currentposition)
     output_data_file.write(str(t)+","+str(currentposition[0])+","+str(currentposition[1])+"\n")
