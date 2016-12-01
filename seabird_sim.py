@@ -12,16 +12,17 @@ chloro_datafiles = [os.path.join("data_chloro",f) for f in os.listdir("data_chlo
 wind_merid_datafiles = [os.path.join("data_wind",f) for f in os.listdir("data_wind") if f[-4:].lower()==".csv" and f[0]=="m"]
 wind_zonal_datafiles = [os.path.join("data_wind",f) for f in os.listdir("data_wind") if f[-4:].lower()==".csv" and f[0]=="z"]
 
-initialposition = (576,573) #Position of South Georgia and the Sandwich Islands
-a = float(argv[1])
-kT = float(argv[2])
+initial_lat = argv[1]
+initial_lon = argv[2]
+a = float(argv[3])
+kT = float(argv[4])
 
-if len(argv) > 3:
-    start_month = int(argv[3])
+if len(argv) > 5:
+    start_month = int(argv[5])
 else:
     start_month = 1
-if len(argv) > 4:
-    end_month = int(argv[4])
+if len(argv) > 6:
+    end_month = int(argv[5])
 else:
     end_month = 12
 
@@ -68,7 +69,7 @@ def realdistance(a,b):
     return dist
 
 t=0
-currentposition = initialposition
+currentposition = (int(resources_shape[0]/2-initial_lat/d_latlong),int(resources_shape[1]/2+initial_lon/d_latlong))
 #Create folder
 if os.path.exists("../output_data"):
     pass

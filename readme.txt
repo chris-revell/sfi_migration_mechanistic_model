@@ -11,9 +11,9 @@ This program is designed to be run in python3. Running in python2 will cause bug
 Run the program by typing the following at the command line, where path is the location of the input data and the 2nd and 3rd arguments are the values of parameters a and kT.
 start_month and end_month are optional integer arguments in range (1,12) specifying the months at which the simulation should start and end. If arguments are not supplied, the default values are 1 and 12.
 
-python3 seabird_sim.py <path> a kT start_month end_month
+python3 seabird_sim.py <latitude of start point> <longitude of start point> a kT start_month end_month
 or,
-./seabird_sim.py <path> a kT start_month end_month
+./seabird_sim.py <latitude of start point> <longitude of start point> a kT start_month end_month
 
 Link to Overleaf LaTeX document for this project:
 https://www.overleaf.com/5621453ctqmfc#/18190037/
