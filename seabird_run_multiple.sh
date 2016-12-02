@@ -11,7 +11,7 @@ num_cores=$(getconf _NPROCESSORS_ONLN)
 echo "Number of cores: "$num_cores
 i=1
 while ((i<=num_cores)); do
-  python3 seabird_sim.py $initial_lat $initial_lon $a $kT $start_month $end_month $i >> run$i_out.txt &
+  python3 seabird_sim.py $initial_lat $initial_lon $a $kT $start_month $end_month $i >> ../output_data/run$i_out.txt &
   let i++
 done
 echo "Running "$i" simulations"
