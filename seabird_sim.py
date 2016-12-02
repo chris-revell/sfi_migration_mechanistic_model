@@ -12,8 +12,8 @@ chloro_datafiles = [os.path.join("data_chloro",f) for f in os.listdir("data_chlo
 wind_merid_datafiles = [os.path.join("data_wind",f) for f in os.listdir("data_wind") if f[-4:].lower()==".csv" and f[0]=="m"]
 wind_zonal_datafiles = [os.path.join("data_wind",f) for f in os.listdir("data_wind") if f[-4:].lower()==".csv" and f[0]=="z"]
 
-initial_lat = argv[1]
-initial_lon = argv[2]
+initial_lat = float(argv[1])
+initial_lon = float(argv[2])
 a           = float(argv[3])
 kT          = float(argv[4])
 start_month = int(argv[5])
@@ -68,13 +68,13 @@ if os.path.exists("../output_data"):
 else:
     os.mkdir("../output_data")
 if len(argv) > 7:
-    run_folder = os.path.join("../output_data/",time.strftime("%y%m%d%H%M")+"_a"+str(a)+"_"+argv[7])
+    run_folder = os.path.join("../output_data/",time.strftime("%y%m%d%H%M")+"_a"+str(a)+"_Run"+argv[7])
 else:
     run_folder = os.path.join("../output_data/",time.strftime("%y%m%d%H%M")+"_a"+str(a))
 os.mkdir(run_folder)
 #Save run parameters
 parameterfile = open(os.path.join(run_folder,"parameters.txt"),'w')
-parameterfile.write("a = "+str(a)+"\nkt = "+str(kT)+"\nt_max = "+str(t_max)+"\ninitialposition = "+str(initialposition))
+parameterfile.write("a = "+str(a)+"\nkt = "+str(kT)+"\nt_max = "+str(t_max)+"\ninitialposition = "+str(currentposition))
 parameterfile.write("\nstart_month = "+str(start_month)+"\nend_month = "+str(end_month)+"\nbird_speed = "+str(bird_speed))
 parameterfile.close()
 output_data_file = open(os.path.join(run_folder,"positiondata.csv"),'w')
@@ -82,8 +82,9 @@ output_data_file.write(str(t)+","+str(currentposition[0])+","+str(currentpositio
 
 t=0.00001
 dt = 0.001
-previous_position = initialposition
 while t < t_max:
+
+    previous_position = currentposition
 
     if t%720 < dt:
         #Refresh data arrays every 720 hours (~1 month)
