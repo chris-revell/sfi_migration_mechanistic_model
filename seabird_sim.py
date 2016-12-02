@@ -14,21 +14,13 @@ wind_zonal_datafiles = [os.path.join("data_wind",f) for f in os.listdir("data_wi
 
 initial_lat = argv[1]
 initial_lon = argv[2]
-a = float(argv[3])
-kT = float(argv[4])
-
-if len(argv) > 5:
-    start_month = int(argv[5])
-else:
-    start_month = 1
-if len(argv) > 6:
-    end_month = int(argv[5])
-else:
-    end_month = 12
+a           = float(argv[3])
+kT          = float(argv[4])
+start_month = int(argv[5])
+end_month   = int(argv[5])
+bird_speed  = 60
 
 t_max=(end_month-start_month+1)*30*24   #Number of hours in months specified
-
-bird_speed = 60
 
 chloro_datafiles[0:(start_month-1)] = []
 wind_merid_datafiles[0:(start_month-1)] = []
@@ -75,7 +67,10 @@ if os.path.exists("../output_data"):
     pass
 else:
     os.mkdir("../output_data")
-run_folder = os.path.join("../output_data/",time.strftime("%y%m%d%H%M")+"_a"+str(a))
+if len(argv) > 7:
+    run_folder = os.path.join("../output_data/",time.strftime("%y%m%d%H%M")+"_a"+str(a)+"_"+argv[7])
+else:
+    run_folder = os.path.join("../output_data/",time.strftime("%y%m%d%H%M")+"_a"+str(a))
 os.mkdir(run_folder)
 #Save run parameters
 parameterfile = open(os.path.join(run_folder,"parameters.txt"),'w')
