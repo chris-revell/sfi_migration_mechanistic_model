@@ -14,20 +14,29 @@ wind_zonal_datafiles = [os.path.join("data_wind",f) for f in os.listdir("data_wi
 
 initial_lat = float(argv[1])
 initial_lon = float(argv[2])
-a           = float(argv[3])
-kT          = float(argv[4])
-start_month = int(argv[5])
-end_month   = int(argv[5])
+a           = float(argv[3]) # Relative contribution of wind potential to total potential where contribution of chlorophyll is 1
+b           = float(argv[4]) # Relative contribution of breeding ground attraction potential to total potential where contribution of chlorophyll is 1
+c           = float(argv[5]) # Exponential factor for variation of breeding ground attraction with time
+kT          = float(argv[6]) # Effective temperature of bird - high value increases randomness in path, lower value collapses to lowest energy state.
+start_month = int(argv[7])   # Start month defines the end of the breeding season when birds leave the breeding colony, whose position is defined by initial_lat and initial_lon
+
 bird_speed  = 60
 
-t_max=(end_month-start_month+1)*30*24   #Number of hours in months specified
+if len(argv) <= 8:
+    t_max = 30*24*12 #Full year
+else:
+    end_month   = int(argv[8])              # End month specified if we want to stop simulation before a full year.
+    if end_month < start_month:
+        end_month = end_month+12
+    t_max=(end_month-start_month+1)*30*24   #Number of hours in months specified
 
-chloro_datafiles[0:(start_month-1)] = []
-wind_merid_datafiles[0:(start_month-1)] = []
-wind_zonal_datafiles[0:(start_month-1)] = []
-chloro_datafiles[end_month:12] = []
-wind_merid_datafiles[end_month:12] = []
-wind_zonal_datafiles[end_month:12] = []
+#Function to rotate list of datafiles to begin at start_month
+def rotate(l, n):
+    return l[n-1:] + l[:n-1]
+
+chloro_datafiles = rotate(chloro_datafiles,start_month)
+wind_merid_datafiles = rotate(wind_merid_datafiles,start_month)
+wind_zonal_datafiles = rotate(wind_zonal_datafiles,start_month)
 
 #Import ground map
 earth = np.genfromtxt("earth1440x720.CSV",delimiter=",")
@@ -61,7 +70,8 @@ def realdistance(a,b):
     return dist
 
 t=0
-currentposition = (int(resources_shape[0]/2-initial_lat/d_latlong),int(resources_shape[1]/2+initial_lon/d_latlong))
+initialposition = (int(resources_shape[0]/2-initial_lat/d_latlong),int(resources_shape[1]/2+initial_lon/d_latlong))
+currentposition = initialposition
 #Create folder
 if os.path.exists("../output_data"):
     pass
@@ -133,6 +143,9 @@ while t < t_max:
                 displacement_vector = np.array([i,j])
                 displacement_vector_magnitude = sqrt(np.dot(displacement_vector,displacement_vector))
                 state_potential = state_potential + a*wind_magnitude*np.dot(wind_vector,displacement_vector)/displacement_vector_magnitude
+
+                breeding_dist_dif = realdistance(initialposition,state_index) - realdistance(initialposition,currentposition)
+                state_potential = state_potential - (np.sign(breeding_dist_dif))*b*breeding_dist_dif**(t*c/8760)
 
                 possible_state_boltzmann_factors[i+1,j+1] = exp(state_potential/kT)
 

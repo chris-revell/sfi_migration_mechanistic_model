@@ -8,12 +8,21 @@ A bird is placed within the lattice and allowed to move to one of the eight surr
 
 This program is designed to be run in python3. Running in python2 will cause bugs. Matplotlib, mpl_toolkits.basemap and numpy must be installed for the program to run.
 
-Run the program by typing the following at the command line, where path is the location of the input data and the 2nd and 3rd arguments are the values of parameters a and kT.
-start_month and end_month are optional integer arguments in range (1,12) specifying the months at which the simulation should start and end. If arguments are not supplied, the default values are 1 and 12.
+Run the program by typing the following at the command line:
 
-python3 seabird_sim.py <latitude of start point> <longitude of start point> a kT start_month end_month
+python3 seabird_sim.py (arguments)
 or,
-./seabird_sim.py <latitude of start point> <longitude of start point> a kT start_month end_month
+./seabird_sim.py (arguments)
+
+Where the arguments are a list in the following order:
+initial_lat - Latitude of breeding location
+initial_lon - Longitude of breeding location
+a           - Relative contribution of wind potential to total potential where contribution of chlorophyll is 1
+b           - Relative contribution of breeding ground attraction potential to total potential where contribution of chlorophyll is 1
+c           - Exponential factor for variation of breeding ground attraction with time
+kT          - Effective temperature of bird - high value increases randomness in path, lower value collapses to lowest energy state.
+start_month - Start month (range 1-12) defines the end of the breeding season when birds leave the breeding colony, whose position is defined by initial_lat and initial_lon
+end_month   - (Optional) specifies when to stop simulation if a full year is not required
 
 Link to Overleaf LaTeX document for this project:
 https://www.overleaf.com/5621453ctqmfc#/18190037/
@@ -27,3 +36,4 @@ Things left to do:
   - Identify how to collect data.
     > Perform many runs and create heat maps of bird distribution at different time points?
     > Marius to identify relevant measurements from system that would be useful to ornithologists?
+  - Change bird speed in accordance with wind speed?
