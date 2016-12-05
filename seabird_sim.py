@@ -85,7 +85,7 @@ os.mkdir(run_folder)
 #Save run parameters
 parameterfile = open(os.path.join(run_folder,"parameters.txt"),'w')
 parameterfile.write("a = "+str(a)+"\nkt = "+str(kT)+"\nt_max = "+str(t_max)+"\ninitialposition = "+str(currentposition))
-parameterfile.write("\nstart_month = "+str(start_month)+"\nend_month = "+str(end_month)+"\nbird_speed = "+str(bird_speed))
+parameterfile.write("\nstart_month = "+str(start_month)+"\nbird_speed = "+str(bird_speed))
 parameterfile.close()
 output_data_file = open(os.path.join(run_folder,"positiondata.csv"),'w')
 output_data_file.write(str(t)+","+str(currentposition[0])+","+str(currentposition[1])+"\n")
@@ -145,7 +145,7 @@ while t < t_max:
                 state_potential = state_potential + a*wind_magnitude*np.dot(wind_vector,displacement_vector)/displacement_vector_magnitude
 
                 breeding_dist_dif = realdistance(initialposition,state_index) - realdistance(initialposition,currentposition)
-                state_potential = state_potential - (np.sign(breeding_dist_dif))*b*breeding_dist_dif**(t*c/8760)
+                state_potential = state_potential - (np.sign(breeding_dist_dif))*b*(abs(breeding_dist_dif))**(t*c/8760)
 
                 possible_state_boltzmann_factors[i+1,j+1] = exp(state_potential/kT)
 
