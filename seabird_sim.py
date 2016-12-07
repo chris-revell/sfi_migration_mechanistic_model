@@ -94,7 +94,7 @@ t=0.00001
 dt = 0.001
 while t < t_max:
 
-    previous_position = currentposition
+    previousposition = currentposition
 
     if t%720 < dt:
         #Refresh data arrays every 720 hours (~1 month)
@@ -172,7 +172,9 @@ while t < t_max:
             else:
                 pass
 
-    dt = realdistance(currentposition,previous_position)/bird_speed
+    wind_vector = np.array([wind_merid[currentposition],wind_zonal[currentposition]]) #In form [y,x] for ease of translation to np arrays.
+    speed = bird_speed + np.dot(currentposition-previousposition,wind_vector)/sqrt(np.dot(currentposition-previousposition,currentposition-previousposition))
+    dt = realdistance(currentposition,previousposition)/speed
     t = t + dt
 
     print(t,currentposition)
