@@ -173,7 +173,8 @@ while t < t_max:
                 pass
 
     wind_vector = np.array([wind_merid[currentposition],wind_zonal[currentposition]]) #In form [y,x] for ease of translation to np arrays.
-    speed = bird_speed + np.dot(currentposition-previousposition,wind_vector)/sqrt(np.dot(currentposition-previousposition,currentposition-previousposition))
+    dx = np.array([currentposition[0]-previousposition[0],currentposition[1]-previousposition[1]])
+    speed = bird_speed + np.dot(dx,wind_vector)/sqrt(np.dot(dx,dx))
     dt = realdistance(currentposition,previousposition)/speed
     t = t + dt
 
