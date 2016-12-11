@@ -5,6 +5,7 @@ from random import random
 from math import exp, acos, sin, cos, pi, radians, sqrt
 import os
 import time
+import real_distance
 #import matplotlib.pyplot as plt
 #from mpl_toolkits.basemap import Basemap
 
@@ -50,24 +51,6 @@ for i in range(0,resources_shape[0]):
 
 
 d_latlong = 180/resources_shape[0]
-
-#Define function to calculate the real distance between two given lattice points
-def realdistance(a,b):
-    latlonga   = ((resources_shape[0]/2-a[0]-0.5)*d_latlong, (a[1]+0.5-resources_shape[1]/2)*d_latlong) #(latitude,longitude) position of lattice point a
-    latlongb   = ((resources_shape[0]/2-b[0]-0.5)*d_latlong, (b[1]+0.5-resources_shape[1]/2)*d_latlong) #(latitude,longitude) position of lattice point b
-    delta_long = latlongb[1]-latlonga[1]
-    term1      = sin(radians(latlonga[0]))*sin(radians(latlongb[0]))
-    term2      = cos(radians(latlonga[0]))*cos(radians(latlongb[0]))*cos(radians(delta_long))
-    #When the bird doesn't move, and latlonga = latlongb, small rounding errors can lead to taking the arccos of a number a tiny bit higher than 1, eg 1.0000000000000002, so it's safer to set the distance equal to 0 in this case rather than doing the full calculation
-    if latlonga == latlongb:
-        dist = 0.0
-    elif term1+term2 > 1:
-        dist = 6371*acos(1)
-    elif term1+term2 < -1:
-        dist = 6371*acos(-1)
-    else:
-        dist = 6371*acos(term1+term2) # 6371 is the radius of the earth in km (assuming spherical)
-    return dist
 
 t=0
 initialposition = (int(resources_shape[0]/2-initial_lat/d_latlong),int(resources_shape[1]/2+initial_lon/d_latlong))
@@ -136,7 +119,7 @@ while t < t_max:
                 for k in range(0,resources_shape[0]):
                     for l in range(0,resources_shape[1]):
                         if earth[k,l] == 0 and resources_filtered[k,l] > 0 and (k,l) != state_index:
-                            state_potential = state_potential + resources_filtered[k,l]/realdistance((k,l),state_index)
+                            state_potential = state_potential + resources_filtered[k,l]/real_distance.realdistance(k,l,state_index[0],state_index[1])
 
                 wind_vector = np.array([wind_merid[currentposition],wind_zonal[currentposition]]) #In form [y,x] for ease of translation to np arrays.
                 wind_magnitude = sqrt(np.dot(wind_vector,wind_vector))
@@ -144,7 +127,7 @@ while t < t_max:
                 displacement_vector_magnitude = sqrt(np.dot(displacement_vector,displacement_vector))
                 state_potential = state_potential + a*wind_magnitude*np.dot(wind_vector,displacement_vector)/displacement_vector_magnitude
 
-                breeding_dist_dif = realdistance(initialposition,state_index) - realdistance(initialposition,currentposition)
+                breeding_dist_dif = real_distance.realdistance(initialposition[0],initialposition[1],state_index[0],state_index[1]) - real_distance.realdistance(initialposition[0],initialposition[1],currentposition[0],currentposition[1])
                 state_potential = state_potential - (np.sign(breeding_dist_dif))*b*(abs(breeding_dist_dif))**(t*c/8760)
 
                 possible_state_boltzmann_factors[i+1,j+1] = exp(state_potential/kT)
@@ -175,7 +158,7 @@ while t < t_max:
     wind_vector = np.array([wind_merid[currentposition],wind_zonal[currentposition]]) #In form [y,x] for ease of translation to np arrays.
     dx = np.array([currentposition[0]-previousposition[0],currentposition[1]-previousposition[1]])
     speed = bird_speed + np.dot(dx,wind_vector)/sqrt(np.dot(dx,dx))
-    dt = realdistance(currentposition,previousposition)/speed
+    dt = real_distance.realdistance(currentposition[0],currentposition[1],previousposition[0],previousposition[1])/speed
     t = t + dt
 
     print(t,currentposition)
