@@ -77,8 +77,8 @@ if os.path.exists("../output_data"):
     pass
 else:
     os.mkdir("../output_data")
-if len(argv) > 8:
-    run_folder = os.path.join("../output_data/",time.strftime("%y%m%d%H%M")+"_a"+str(a)+"_Run"+argv[7])
+if len(argv) > 9:
+    run_folder = os.path.join("../output_data/",time.strftime("%y%m%d%H%M")+"_a"+str(a)+"_Run"+argv[9])
 else:
     run_folder = os.path.join("../output_data/",time.strftime("%y%m%d%H%M")+"_a"+str(a))
 os.mkdir(run_folder)
@@ -178,7 +178,7 @@ while t < t_max:
     dt = realdistance(currentposition,previousposition)/speed
     t = t + dt
 
-    print(t,currentposition)
+    #print(t,currentposition)
     output_data_file.write(str(t)+","+str(currentposition[0])+","+str(currentposition[1])+"\n")
 
 
