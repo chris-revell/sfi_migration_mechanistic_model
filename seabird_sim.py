@@ -178,7 +178,7 @@ while t < t_max:
     dt = realdistance(currentposition,previousposition)/speed
     t = t + dt
 
-    #print(t,currentposition)
+    print(t,currentposition)
     output_data_file.write(str(t)+","+str(currentposition[0])+","+str(currentposition[1])+"\n")
 
 
