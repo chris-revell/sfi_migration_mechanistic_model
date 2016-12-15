@@ -25,7 +25,7 @@ d_latlong = 180/lattice_shape[0]
 fig2 = plt.figure()
 ax3 = fig2.add_subplot(111)
 ax3.imshow(earth,cmap="Greens")
-ax3.plot(positiondata[:,2],positiondata[:,1])
+ax3.scatter(positiondata[:,2],positiondata[:,1],s=0.5)
 ax3.tick_params(axis='both', which='both', bottom='off', top='off', labelbottom='off', right='off', left='off', labelleft='off')
 ax3.set_xlim([0,lattice_shape[1]])
 ax3.set_ylim([lattice_shape[0],0])
@@ -40,5 +40,5 @@ map.drawmapboundary(fill_color='aqua')
 lats = (lattice_shape[0]/2-positiondata[:,1]-0.5)*d_latlong
 lons = (positiondata[:,2]+0.5-lattice_shape[1]/2)*d_latlong
 x,y=map(lons,lats)
-map.plot(x,y,color="black")
+map.scatter(x,y,color="black",s=0.5)
 plt.savefig(os.path.join(argv[1],"map.png"),format='png')
