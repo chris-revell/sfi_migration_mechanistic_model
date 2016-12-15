@@ -1,16 +1,17 @@
 
-subroutine boltzmanncalc(boltzmann_factorscurrenta,currentb,initiala,initialb,earth,resources_filtered,a,b,c,kT)
+subroutine boltzmanncalc(boltzmann_factors,currenta,currentb,initiala,initialb,earth,wind_m,wind_z,resources_filtered,a,b,c,kT,t)
 
   integer                             :: i,j,k,l
-  real,intent(in),dimension(3,3)      :: boltzmann_factors
+  real,intent(inout),dimension(3,3)   :: boltzmann_factors
   integer,intent(in)                  :: currenta,currentb,initiala,initialb
-  real,intent(in)                     :: a,b,c,kT
+  real,intent(in)                     :: a,b,c,kT,wind_m,wind_z,t
   real,intent(in),dimension(720,1440) :: resources_filtered
   real,intent(in),dimension(720,1440) :: earth
   integer,dimension(2)                :: resources_shape
   integer,dimension(2)                :: state_index
-  integer,dimension(2)                :: wind_vector,displacement_vector
-  real                                :: state_potential,wind_magnitude,displacement_vector_magnitude
+  real,dimension(2)                   :: wind_vector
+  integer,dimension(2)                :: displacement_vector
+  real                                :: state_potential,wind_magnitude,displacement_vector_magnitude,wind_mag_sq,disp_mag_sq
 
   resources_shape = (/720,1440/)
 
@@ -20,31 +21,33 @@ subroutine boltzmanncalc(boltzmann_factorscurrenta,currentb,initiala,initialb,ea
 
   do i=1,3
     do j=1,3
-      state_index = (/(currenta+i-2),MOD((currentb+j-2),resources_shape[2])/)
+      state_index = (/(currenta+i-2),MOD((currentb+j-2),resources_shape(2))/)
       if (i.EQ.2.AND.j.EQ.2) then
           CYCLE
-      elseif (earth(state_index(1),state_index(2)).EQ.1):
+      elseif (earth(state_index(1),state_index(2)).EQ.1) then
           CYCLE
       else
         state_potential = 0.0
         do k=1,resources_shape(1)
           do l=1,resources_shape(2)
             if (earth(k,l).EQ.0.AND.resources_filtered(k,l).GT.0.AND.k.NE.state_index(1).AND.l.NE.state_index(2)) then
-              state_potential = state_potential + resources_filtered(k,l)/realdistance(k,l,state_index[0],state_index[1])
+              state_potential = state_potential + resources_filtered(k,l)/realdistance(k,l,state_index(1),state_index(2))
             endif
           enddo
         enddo
-        wind_vector = np.array([wind_merid[current],wind_zonal[current]]) !In form [y,x] for ease of translation to np arrays.
-        wind_magnitude = sqrt(np.dot(wind_vector,wind_vector))
-        displacement_vector = np.array([i,j])
-        displacement_vector_magnitude = sqrt(np.dot(displacement_vector,displacement_vector))
-        state_potential = state_potential + a*wind_magnitude*np.dot(wind_vector,displacement_vector)/displacement_vector_magnitude
+        wind_vector = (/wind_m,wind_z/) !In form [y,x] for ease of translation to np arrays.
+        wind_mag_sq = DOT_PRODUCT(wind_vector,wind_vector)
+        wind_magnitude = SQRT(wind_mag_sq)
+        displacement_vector = (/i,j/)
+        disp_mag_sq = DOT_PRODUCT(displacement_vector,displacement_vector)
+        displacement_vector_magnitude = sqrt(disp_mag_sq)
+        state_potential=state_potential+a*wind_magnitude*DOT_PRODUCT(wind_vector,displacement_vector)/displacement_vector_magnitude
 
         breeding_dist_dif = realdistance(initiala,initialb,state_index(1),state_index(2)) &
                             - realdistance(initiala,initialb,currenta,currentb)
-        state_potential = state_potential - SIGN(1,breeding_dist_dif)*b*(ABS(breeding_dist_dif))**(t*c/8760.0)
+        state_potential = state_potential - SIGN(1.0,breeding_dist_dif)*b*(ABS(breeding_dist_dif))**(t*c/8760.0)
 
-        possible_state_boltzmann_factors(i,j) = EXP(state_potential/kT)
+        boltzmann_factors(i,j) = EXP(state_potential/kT)
       endif
     enddo
   enddo

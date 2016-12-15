@@ -5,7 +5,7 @@ from random import random
 from math import exp, acos, sin, cos, pi, radians, sqrt
 import os
 import time
-import real_distance
+import fortran_subroutines
 #import matplotlib.pyplot as plt
 #from mpl_toolkits.basemap import Basemap
 
@@ -107,30 +107,8 @@ while t < t_max:
 
     #Calculate potentials in new possible states and convert to Boltzmann factors
     possible_state_boltzmann_factors = np.zeros((3,3))
-    for i in range(-1,2):
-        for j in range(-1,2):
-            state_index = ((currentposition[0]+i),(currentposition[1]+j)%resources_shape[1])
-            if i == 0 and j == 0:
-                pass
-            elif earth[state_index] == 1:
-                pass
-            else:
-                state_potential = 0
-                for k in range(0,resources_shape[0]):
-                    for l in range(0,resources_shape[1]):
-                        if earth[k,l] == 0 and resources_filtered[k,l] > 0 and (k,l) != state_index:
-                            state_potential = state_potential + resources_filtered[k,l]/real_distance.realdistance(k,l,state_index[0],state_index[1])
 
-                wind_vector = np.array([wind_merid[currentposition],wind_zonal[currentposition]]) #In form [y,x] for ease of translation to np arrays.
-                wind_magnitude = sqrt(np.dot(wind_vector,wind_vector))
-                displacement_vector = np.array([i,j])
-                displacement_vector_magnitude = sqrt(np.dot(displacement_vector,displacement_vector))
-                state_potential = state_potential + a*wind_magnitude*np.dot(wind_vector,displacement_vector)/displacement_vector_magnitude
-
-                breeding_dist_dif = real_distance.realdistance(initialposition[0],initialposition[1],state_index[0],state_index[1]) - real_distance.realdistance(initialposition[0],initialposition[1],currentposition[0],currentposition[1])
-                state_potential = state_potential - (np.sign(breeding_dist_dif))*b*(abs(breeding_dist_dif))**(t*c/8760)
-
-                possible_state_boltzmann_factors[i+1,j+1] = exp(state_potential/kT)
+    fortran_subroutines.boltzmanncalc(possible_state_boltzmann_factors,currentposition[0],currentposition[1],initialposition[0],initialposition[1],earth,wind_merid[currentposition],wind_zonal[currentposition],resources_filtered,a,b,c,kT,t)
 
     #Update position
     #Sum Boltzmann factors for possible states
@@ -158,7 +136,7 @@ while t < t_max:
     wind_vector = np.array([wind_merid[currentposition],wind_zonal[currentposition]]) #In form [y,x] for ease of translation to np arrays.
     dx = np.array([currentposition[0]-previousposition[0],currentposition[1]-previousposition[1]])
     speed = bird_speed + np.dot(dx,wind_vector)/sqrt(np.dot(dx,dx))
-    dt = real_distance.realdistance(currentposition[0],currentposition[1],previousposition[0],previousposition[1])/speed
+    dt = fortran_subroutines.realdistance(currentposition[0],currentposition[1],previousposition[0],previousposition[1])/speed
     t = t + dt
 
     print(t,currentposition)
