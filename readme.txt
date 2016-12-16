@@ -38,3 +38,7 @@ Things left to do:
     > Marius to identify relevant measurements from system that would be useful to ornithologists?
   - Change bird speed in accordance with wind speed? *DONE*
   - Improve run time with fortran subroutines?
+
+
+Compile fortran subroutines with:
+f2py -c -m fortran_subroutines fortran_subroutines.f95
