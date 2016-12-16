@@ -60,8 +60,8 @@ if os.path.exists("../output_data"):
     pass
 else:
     os.mkdir("../output_data")
-if len(argv) > 7:
-    run_folder = os.path.join("../output_data/",time.strftime("%y%m%d%H%M")+"_a"+str(a)+"_Run"+argv[7])
+if len(argv) > 9:
+    run_folder = os.path.join("../output_data/",time.strftime("%y%m%d%H%M")+"_a"+str(a)+"_Run"+argv[9])
 else:
     run_folder = os.path.join("../output_data/",time.strftime("%y%m%d%H%M")+"_a"+str(a))
 os.mkdir(run_folder)

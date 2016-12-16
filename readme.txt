@@ -36,4 +36,5 @@ Things left to do:
   - Identify how to collect data.
     > Perform many runs and create heat maps of bird distribution at different time points?
     > Marius to identify relevant measurements from system that would be useful to ornithologists?
-  - Change bird speed in accordance with wind speed?
+  - Change bird speed in accordance with wind speed? *DONE*
+  - Improve run time with fortran subroutines?
