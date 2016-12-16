@@ -1,17 +1,16 @@
-
 subroutine boltzmanncalc(boltzmann_factors,currenta,currentb,initiala,initialb,earth,wind_m,wind_z,resources_filtered,a,b,c,kT,t)
 
-  integer                             :: i,j,k,l
-  real,intent(inout),dimension(3,3)   :: boltzmann_factors
-  integer,intent(in)                  :: currenta,currentb,initiala,initialb
-  real,intent(in)                     :: a,b,c,kT,wind_m,wind_z,t
-  real,intent(in),dimension(720,1440) :: resources_filtered
-  real,intent(in),dimension(720,1440) :: earth
-  integer,dimension(2)                :: resources_shape
-  integer,dimension(2)                :: state_index
-  real,dimension(2)                   :: wind_vector
-  integer,dimension(2)                :: displacement_vector
-  real                                :: state_potential,wind_magnitude,displacement_vector_magnitude,wind_mag_sq,disp_mag_sq
+  integer*8                             :: i,j,k,l
+  real*8,intent(inout),dimension(3,3)   :: boltzmann_factors
+  integer*8,intent(in)                  :: currenta,currentb,initiala,initialb
+  real*8,intent(in)                     :: a,b,c,kT,wind_m,wind_z,t
+  real*8,intent(in),dimension(720,1440) :: resources_filtered
+  real*8,intent(in),dimension(720,1440) :: earth
+  integer*8,dimension(2)                :: resources_shape
+  integer*8,dimension(2)                :: state_index
+  real*8,dimension(2)                   :: wind_vector
+  integer*8,dimension(2)                :: displacement_vector
+  real*8                                :: state_potential,wind_magnitude,displacement_vector_magnitude,wind_mag_sq,disp_mag_sq
 
   resources_shape = (/720,1440/)
 
@@ -57,11 +56,11 @@ end subroutine boltzmanncalc
 !Assumes 720x1440 environment arrays
 function realdistance(a1,a2,b1,b2)
 
-  integer,intent(in) :: a1,a2,b1,b2
-!  real, intent(out)  :: realdistance
-  real               :: d_latlong,delta_long,term1,term2
-  real,dimension(2)  :: latlonga,latlongb
-  real,parameter     :: pi  = 4*atan (1.0)
+  integer*8,intent(in) :: a1,a2,b1,b2
+!  real*8, intent(out)  :: realdistance
+  real*8               :: d_latlong,delta_long,term1,term2
+  real*8,dimension(2)  :: latlonga,latlongb
+  real*8,parameter     :: pi  = 4*atan (1.0)
 
   d_latlong = 180.0/720.0
 

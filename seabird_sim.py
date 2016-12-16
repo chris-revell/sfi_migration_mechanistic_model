@@ -40,7 +40,7 @@ wind_merid_datafiles = rotate(wind_merid_datafiles,start_month)
 wind_zonal_datafiles = rotate(wind_zonal_datafiles,start_month)
 
 #Import ground map
-earth = np.genfromtxt("earth1440x720.CSV",delimiter=",")
+earth = np.asfortranarray(np.genfromtxt("earth1440x720.CSV",delimiter=","))
 resources_shape = np.shape(earth)
 for i in range(0,resources_shape[0]):
     for j in range(0,resources_shape[1]):
@@ -88,7 +88,7 @@ while t < t_max:
         resources_shape = np.shape(resources)
 
         #Threshold chloro data
-        resources_filtered = np.zeros(resources_shape)
+        resources_filtered = np.asfortranarray(np.zeros(resources_shape))
         for i in range(0,resources_shape[0]):
             for j in range(0,resources_shape[1]):
                 if 99999 > resources[i,j] > 5:
@@ -97,16 +97,16 @@ while t < t_max:
         #Import wind data
         merid_filename = wind_merid_datafiles.pop(0)
         print(merid_filename)
-        wind_merid = np.genfromtxt(merid_filename,delimiter=",") #North to south wind speed
+        wind_merid = np.asfortranarray(np.genfromtxt(merid_filename,delimiter=",")) #North to south wind speed
         zonal_filename = wind_zonal_datafiles.pop(0)
         print(zonal_filename)
-        wind_zonal = np.genfromtxt(zonal_filename,delimiter=",") #West to east wind speed
+        wind_zonal = np.asfortranarray(np.genfromtxt(zonal_filename,delimiter=",")) #West to east wind speed
 
         refresh_timer = 0
 
 
     #Calculate potentials in new possible states and convert to Boltzmann factors
-    possible_state_boltzmann_factors = np.zeros((3,3))
+    possible_state_boltzmann_factors = np.asfortranarray(np.zeros((3,3)))
 
     fortran_subroutines.boltzmanncalc(possible_state_boltzmann_factors,currentposition[0],currentposition[1],initialposition[0],initialposition[1],earth,wind_merid[currentposition],wind_zonal[currentposition],resources_filtered,a,b,c,kT,t)
 
