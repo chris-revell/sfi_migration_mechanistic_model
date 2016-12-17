@@ -57,7 +57,6 @@ end subroutine boltzmanncalc
 function realdistance(a1,a2,b1,b2)
 
   integer*8,intent(in) :: a1,a2,b1,b2
-!  real*8, intent(out)  :: realdistance
   real*8               :: d_latlong,delta_long,term1,term2
   real*8,dimension(2)  :: latlonga,latlongb
   real*8,parameter     :: pi  = 4*atan (1.0)

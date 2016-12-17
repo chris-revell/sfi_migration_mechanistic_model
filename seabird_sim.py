@@ -52,6 +52,11 @@ for i in range(0,resources_shape[0]):
 
 d_latlong = 180/resources_shape[0]
 
+def xytolatlong(xy):
+    lat = (resources_shape[0]/2.0-xy[0]-0.5)*d_latlong
+    lon = (xy[1]+0.5-resources_shape[1]/2.0)*d_latlong
+    return (lat,lon)
+
 t=0
 initialposition = (int(resources_shape[0]/2-initial_lat/d_latlong),int(resources_shape[1]/2+initial_lon/d_latlong))
 currentposition = initialposition
@@ -72,6 +77,9 @@ parameterfile.write("\nstart_month = "+str(start_month)+"\nbird_speed = "+str(bi
 parameterfile.close()
 output_data_file = open(os.path.join(run_folder,"positiondata.csv"),'w')
 output_data_file.write(str(t)+","+str(currentposition[0])+","+str(currentposition[1])+"\n")
+output_latlong_file = open(os.path.join(run_folder,"latlongdata.csv"),'w')
+currentlatlon = xytolatlong(currentposition)
+output_latlong_file.write(str(t)+","+str(currentlatlon[0])+","+str(currentlatlon[1])+"\n")
 
 t=0.00001
 dt = 0.001
@@ -141,6 +149,8 @@ while t < t_max:
 
     print(t,currentposition)
     output_data_file.write(str(t)+","+str(currentposition[0])+","+str(currentposition[1])+"\n")
+    currentlatlon = xytolatlong(currentposition)
+    output_latlong_file.write(str(t)+","+str(currentlatlon[0])+","+str(currentlatlon[1])+"\n")
 
 
 
