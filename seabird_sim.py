@@ -1,18 +1,18 @@
 #!/Library/Frameworks/Python.framework/Versions/3.5/bin/python3
-from sys import argv,exit
+from sys import argv
 import numpy as np
 from random import random
-from math import exp, acos, sin, cos, pi, radians, sqrt
+from math import sqrt
 import os
 import time
 import fortran_subroutines
-#import matplotlib.pyplot as plt
-#from mpl_toolkits.basemap import Basemap
 
+#Fins all datafiles
 chloro_datafiles = [os.path.join("data_chloro",f) for f in os.listdir("data_chloro") if f[-4:].lower()==".csv"]
 wind_merid_datafiles = [os.path.join("data_wind",f) for f in os.listdir("data_wind") if f[-4:].lower()==".csv" and f[0]=="m"]
 wind_zonal_datafiles = [os.path.join("data_wind",f) for f in os.listdir("data_wind") if f[-4:].lower()==".csv" and f[0]=="z"]
 
+#Initial conditions
 initial_lat = float(argv[1])
 initial_lon = float(argv[2])
 a           = float(argv[3]) # Relative contribution of wind potential to total potential where contribution of chlorophyll is 1
@@ -50,13 +50,15 @@ for i in range(0,resources_shape[0]):
             earth[i,j] = 1
 
 
-d_latlong = 180/resources_shape[0]
+d_latlong = 180/resources_shape[0] #Change in latitude and longitude angle per lattice point.
 
+#Define function to convert lattice positions to latitude and longitude values.
 def xytolatlong(xy):
     lat = (resources_shape[0]/2.0-xy[0]-0.5)*d_latlong
     lon = (xy[1]+0.5-resources_shape[1]/2.0)*d_latlong
     return (lat,lon)
 
+#Initialise system time and position.
 t=0
 initialposition = (int(resources_shape[0]/2-initial_lat/d_latlong),int(resources_shape[1]/2+initial_lon/d_latlong))
 currentposition = initialposition
@@ -75,6 +77,7 @@ parameterfile = open(os.path.join(run_folder,"parameters.txt"),'w')
 parameterfile.write("a = "+str(a)+"\nkt = "+str(kT)+"\nt_max = "+str(t_max)+"\ninitialposition = "+str(currentposition))
 parameterfile.write("\nstart_month = "+str(start_month)+"\nbird_speed = "+str(bird_speed))
 parameterfile.close()
+#Save positions for t=0
 output_data_file = open(os.path.join(run_folder,"positiondata.csv"),'w')
 output_data_file.write(str(t)+","+str(currentposition[0])+","+str(currentposition[1])+"\n")
 output_latlong_file = open(os.path.join(run_folder,"latlongdata.csv"),'w')
@@ -116,6 +119,7 @@ while t < t_max:
     #Calculate potentials in new possible states and convert to Boltzmann factors
     possible_state_boltzmann_factors = np.asfortranarray(np.zeros((3,3)))
 
+    #Call boltzmanncalc subroutine from fortran_subroutines library to calculate boltzmann factors for possible states
     fortran_subroutines.boltzmanncalc(possible_state_boltzmann_factors,currentposition[0],currentposition[1],initialposition[0],initialposition[1],earth,wind_merid[currentposition],wind_zonal[currentposition],resources_filtered,a,b,c,kT,t)
 
     #Update position
@@ -141,47 +145,15 @@ while t < t_max:
             else:
                 pass
 
+    #Update time
     wind_vector = np.array([wind_merid[currentposition],wind_zonal[currentposition]]) #In form [y,x] for ease of translation to np arrays.
     dx = np.array([currentposition[0]-previousposition[0],currentposition[1]-previousposition[1]])
     speed = bird_speed + np.dot(dx,wind_vector)/sqrt(np.dot(dx,dx))
     dt = fortran_subroutines.realdistance(currentposition[0],currentposition[1],previousposition[0],previousposition[1])/speed
     t = t + dt
 
+    #Output data
     print(t,currentposition)
     output_data_file.write(str(t)+","+str(currentposition[0])+","+str(currentposition[1])+"\n")
     currentlatlon = xytolatlong(currentposition)
     output_latlong_file.write(str(t)+","+str(currentlatlon[0])+","+str(currentlatlon[1])+"\n")
-
-
-
-"""
-#Save position data
-np.savetxt(os.path.join(run_folder,"positiondata.txt"),output_data_store)
-
-#Create map of bird path on basemap
-map = Basemap(projection="robin",lon_0=0)
-map.fillcontinents(color='coral',lake_color='aqua')
-map.drawmapboundary(fill_color='aqua')
-lats = (resources_shape[0]/2-output_data_store[:,0]-0.5)*d_latlong
-lons = (output_data_store[:,1]+0.5-resources_shape[1]/2)*d_latlong
-x,y=map(lons,lats)
-map.plot(x,y)
-plt.savefig(os.path.join(run_folder,"map.pdf"))
-
-#Create plot of bird path on lattice
-fig2 = plt.figure()
-ax2 = fig2.add_subplot(211)
-cax = ax2.imshow(resources_filtered,cmap="viridis")
-cbar = fig2.colorbar(cax)
-ax2.plot(output_data_store[:,1],output_data_store[:,0])
-ax2.tick_params(axis='both', which='both', bottom='off', top='off', labelbottom='off', right='off', left='off', labelleft='off')
-ax2.set_xlim([0,resources_shape[1]])
-ax2.set_ylim([resources_shape[0],0])
-ax3 = fig2.add_subplot(212)
-ax3.imshow(earth,cmap="Greys")
-ax3.plot(output_data_store[:,1],output_data_store[:,0])
-ax3.tick_params(axis='both', which='both', bottom='off', top='off', labelbottom='off', right='off', left='off', labelleft='off')
-ax3.set_xlim([0,resources_shape[1]])
-ax3.set_ylim([resources_shape[0],0])
-fig2.savefig(os.path.join(run_folder,"lattice.pdf"))
-"""
