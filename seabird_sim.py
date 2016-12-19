@@ -70,7 +70,7 @@ else:
 if len(argv) > 9:
     run_folder = os.path.join("../output_data/",time.strftime("%y%m%d%H%M")+"_a"+str(a)+"_Run"+argv[9])
 else:
-    run_folder = os.path.join("../output_data/",time.strftime("%y%m%d%H%M")+"_a"+str(a)+"b"+str(b)+"c"+str(c)+"kT"+str(kT)+"m1"+str(start_month))
+    run_folder = os.path.join("../output_data/",time.strftime("%y%m%d%H%M")+"_a"+str(a)+"b"+str(b)+"c"+str(c)+"kT"+str(kT)+"m"+str(start_month))
 os.mkdir(run_folder)
 #Save run parameters
 parameterfile = open(os.path.join(run_folder,"parameters.txt"),'w')
