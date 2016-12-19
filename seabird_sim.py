@@ -70,11 +70,16 @@ else:
 if len(argv) > 9:
     run_folder = os.path.join("../output_data/",time.strftime("%y%m%d%H%M")+"_a"+str(a)+"_Run"+argv[9])
 else:
-    run_folder = os.path.join("../output_data/",time.strftime("%y%m%d%H%M")+"_a"+str(a))
+    run_folder = os.path.join("../output_data/",time.strftime("%y%m%d%H%M")+"_a"+str(a)+"b"+str(b)+"c"+str(c)+"kT"+str(kT)+"m1"+str(start_month))
 os.mkdir(run_folder)
 #Save run parameters
 parameterfile = open(os.path.join(run_folder,"parameters.txt"),'w')
-parameterfile.write("a = "+str(a)+"\nkt = "+str(kT)+"\nt_max = "+str(t_max)+"\ninitialposition = "+str(currentposition))
+parameterfile.write("a  = "+str(a)+"\n")
+parameterfile.write("b  = "+str(b)+"\n")
+parameterfile.write("c  = "+str(c)+"\n")
+parameterfile.write("kt = "+str(kT)+"\n")
+parameterfile.write("t_max = "+str(t_max)+"\n")
+parameterfile.write("initialposition = "+argv[1]+", "+argv[2])
 parameterfile.write("\nstart_month = "+str(start_month)+"\nbird_speed = "+str(bird_speed))
 parameterfile.close()
 #Save positions for t=0
