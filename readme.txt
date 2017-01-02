@@ -31,14 +31,16 @@ Things left to do:
   - Implement continuous time and bird speed rather than discrete time. *DONE*
   - Implement updating of environment data arrays with passage of time, eg. July data replaced with August data after ~720 hours. *DONE*
   - Restrict distance over which chlorophyll can exert attraction?
-  - Exclude very high chlorophyll values? (often due to lakes etc?)
-  - Introduce penalty for change of direction?
+  - Exclude very high chlorophyll values? (often due to lakes etc?) *DONE but need to justify thresholding bounds*
+  - Introduce penalty for change of direction? *Probably no need*
   - Identify how to collect data.
     > Perform many runs and create heat maps of bird distribution at different time points?
     > Marius to identify relevant measurements from system that would be useful to ornithologists?
   - Change bird speed in accordance with wind speed? *DONE*
-  - Improve run time with fortran subroutines?
-
+  - Improve run time with fortran subroutines? *DONE*
 
 Compile fortran subroutines with:
 f2py -c -m fortran_subroutines fortran_subroutines.f95
+
+Overleaf document for this project:
+https://www.overleaf.com/7609498qptrwdvytdkn
