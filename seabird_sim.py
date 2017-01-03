@@ -107,7 +107,7 @@ while t < t_max:
         resources_filtered = np.asfortranarray(np.zeros(resources_shape))
         for i in range(0,resources_shape[0]):
             for j in range(0,resources_shape[1]):
-                if 99999 > resources[i,j] > 5:
+                if 99999 > resources[i,j]:  # > 5:
                     resources_filtered[i,j] = resources[i,j]
 
         #Import wind data
