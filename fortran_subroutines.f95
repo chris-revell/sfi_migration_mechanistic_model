@@ -45,7 +45,6 @@ subroutine boltzmanncalc(boltzmann_factors,currenta,currentb,initiala,initialb,e
         breeding_dist_dif = realdistance(initiala,initialb,state_index(1),state_index(2)) &
                             - realdistance(initiala,initialb,currenta,currentb)
         state_potential = state_potential - SIGN(1.0,breeding_dist_dif)*b*(ABS(breeding_dist_dif))**(t*c/8760.0)
-
         boltzmann_factors(i,j) = EXP(state_potential/kT)
       endif
     enddo

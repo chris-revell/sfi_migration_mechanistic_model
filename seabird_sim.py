@@ -70,7 +70,7 @@ if os.path.exists("../output_data"):
 else:
     os.mkdir("../output_data")
 if len(argv) > 9:
-    run_folder = os.path.join("../output_data/",time.strftime("%y%m%d%H%M")+"_a"+str(a)+"_Run"+argv[9])
+    run_folder = os.path.join("../output_data/",time.strftime("%y%m%d%H%M")+"_a"+str(a)+"b"+str(b)+"c"+str(c)+"kT"+str(kT)+"m"+str(start_month)+"-"+str(end_month)+"_Run"+argv[9])
 else:
     run_folder = os.path.join("../output_data/",time.strftime("%y%m%d%H%M")+"_a"+str(a)+"b"+str(b)+"c"+str(c)+"kT"+str(kT)+"m"+str(start_month)+"-"+str(end_month))
 os.mkdir(run_folder)
