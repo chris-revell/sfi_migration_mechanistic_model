@@ -21,6 +21,8 @@ c           = float(argv[5]) # Exponential factor for variation of breeding grou
 kT          = float(argv[6]) # Effective temperature of bird - high value increases randomness in path, lower value collapses to lowest energy state.
 start_month = int(argv[7])   # Start month defines the end of the breeding season when birds leave the breeding colony, whose position is defined by initial_lat and initial_lon
 
+chloro_threshold = (0.1,5)
+
 bird_speed  = 60
 
 if len(argv) <= 8:
@@ -70,7 +72,7 @@ else:
 if len(argv) > 9:
     run_folder = os.path.join("../output_data/",time.strftime("%y%m%d%H%M")+"_a"+str(a)+"_Run"+argv[9])
 else:
-    run_folder = os.path.join("../output_data/",time.strftime("%y%m%d%H%M")+"_a"+str(a)+"b"+str(b)+"c"+str(c)+"kT"+str(kT)+"m"+str(start_month))
+    run_folder = os.path.join("../output_data/",time.strftime("%y%m%d%H%M")+"_a"+str(a)+"b"+str(b)+"c"+str(c)+"kT"+str(kT)+"m"+str(start_month)+"-"+str(end_month))
 os.mkdir(run_folder)
 #Save run parameters
 parameterfile = open(os.path.join(run_folder,"parameters.txt"),'w')
@@ -81,6 +83,8 @@ parameterfile.write("kt = "+str(kT)+"\n")
 parameterfile.write("t_max = "+str(t_max)+"\n")
 parameterfile.write("initialposition = "+argv[1]+", "+argv[2])
 parameterfile.write("\nstart_month = "+str(start_month)+"\nbird_speed = "+str(bird_speed))
+parameterfile.write("Lower chlorophyll threshold = "+str(chloro_threshold[0])+"\n")
+parameterfile.write("Upper chlorophyll threshold = "+str(chloro_threshold[1])+"\n")
 parameterfile.close()
 #Save positions for t=0
 output_data_file = open(os.path.join(run_folder,"positiondata.csv"),'w')
@@ -107,7 +111,7 @@ while t < t_max:
         resources_filtered = np.asfortranarray(np.zeros(resources_shape))
         for i in range(0,resources_shape[0]):
             for j in range(0,resources_shape[1]):
-                if 99999 > resources[i,j] > 5:
+                if chloro_threshold[1] > resources[i,j] > chloro_threshold[0]:
                     resources_filtered[i,j] = resources[i,j]
 
         #Import wind data
