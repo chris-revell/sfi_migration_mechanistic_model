@@ -23,24 +23,20 @@ c           - Exponential factor for variation of breeding ground attraction wit
 kT          - Effective temperature of bird - high value increases randomness in path, lower value collapses to lowest energy state.
 start_month - Start month (range 1-12) defines the end of the breeding season when birds leave the breeding colony, whose position is defined by initial_lat and initial_lon
 end_month   - (Optional) specifies when to stop simulation if a full year is not required
-
-Link to Overleaf LaTeX document for this project:
-https://www.overleaf.com/5621453ctqmfc#/18190037/
+run         - Run label (integer) for when multiple runs with the same set of parameters are performed
 
 Things left to do:
-  - Implement continuous time and bird speed rather than discrete time. *DONE*
-  - Implement updating of environment data arrays with passage of time, eg. July data replaced with August data after ~720 hours. *DONE*
-  - Restrict distance over which chlorophyll can exert attraction?
-  - Exclude very high chlorophyll values? (often due to lakes etc?) *DONE but need to justify thresholding bounds*
-  - Introduce penalty for change of direction? *Probably no need*
-  - Identify how to collect data.
-    > Perform many runs and create heat maps of bird distribution at different time points?
-    > Marius to identify relevant measurements from system that would be useful to ornithologists?
-  - Change bird speed in accordance with wind speed? *DONE*
-  - Improve run time with fortran subroutines? *DONE*
+  - Improve chlorophyll potential. Restrict distance over which chlorophyll can exert attraction? Remove inland lakes without thresholding? Restrict to southern hemisphere data?
 
 Compile fortran subroutines with:
 f2py -c -m fortran_subroutines fortran_subroutines.f95
 
 Overleaf document for this project:
-https://www.overleaf.com/7609498qptrwdvytdkn
+https://www.overleaf.com/7637608xxmqxvyychzv
+
+Relevant for future work:
+ - https://pypi.python.org/pypi/pyemd
+ - http://pysal.readthedocs.io/en/latest/users/tutorials/dynamics.html
+
+
+

@@ -21,7 +21,7 @@ c           = float(argv[5]) # Exponential factor for variation of breeding grou
 kT          = float(argv[6]) # Effective temperature of bird - high value increases randomness in path, lower value collapses to lowest energy state.
 start_month = int(argv[7])   # Start month defines the end of the breeding season when birds leave the breeding colony, whose position is defined by initial_lat and initial_lon
 
-chloro_threshold = (0.1,5)
+chloro_threshold = (0.0,99999)
 
 bird_speed  = 60
 
@@ -156,7 +156,13 @@ while t < t_max:
 
     #Update time
     wind_vector = np.array([wind_merid[currentposition],wind_zonal[currentposition]]) #In form [y,x] for ease of translation to np arrays.
-    dx = np.array([currentposition[0]-previousposition[0],currentposition[1]-previousposition[1]])
+
+    #dx = np.array([currentposition[0]-previousposition[0],currentposition[1]-previousposition[1]])
+
+    theta = fortran_subroutines.realdistance(currentposition[0],currentposition[1],previousposition[0],currentposition[1])
+    zeta = fortran_subroutines.realdistance(currentposition[0],currentposition[1],currentposition[0],previousposition[1])
+    dx = np.array([theta,zeta])
+
     speed = bird_speed + np.dot(dx,wind_vector)/sqrt(np.dot(dx,dx))
     dt = fortran_subroutines.realdistance(currentposition[0],currentposition[1],previousposition[0],previousposition[1])/speed
     t = t + dt
