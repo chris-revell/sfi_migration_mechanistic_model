@@ -7,28 +7,28 @@ import os
 import time
 import fortran_subroutines
 
-#Fins all datafiles
+#Find all datafiles
 chloro_datafiles = [os.path.join("data_chloro",f) for f in os.listdir("data_chloro") if f[-4:].lower()==".csv"]
-wind_merid_datafiles = [os.path.join("data_wind",f) for f in os.listdir("data_wind") if f[-4:].lower()==".csv" and "merid" in f]
-wind_zonal_datafiles = [os.path.join("data_wind",f) for f in os.listdir("data_wind") if f[-4:].lower()==".csv" and "zonal" in f]
-print(chloro_datafiles)
+wind_merid_datafiles = [os.path.join("data_wind",f) for f in os.listdir("data_wind") if f[-4:].lower()==".txt" and "merid" in f]
+wind_zonal_datafiles = [os.path.join("data_wind",f) for f in os.listdir("data_wind") if f[-4:].lower()==".txt" and "zonal" in f]
+
 #Initial conditions
 initial_lat = float(argv[1])
 initial_lon = float(argv[2])
 a           = float(argv[3]) # Relative contribution of wind potential to total potential where contribution of chlorophyll is 1
-b           = float(argv[4]) # Relative contribution of breeding ground attraction potential to total potential where contribution of chlorophyll is 1
-c           = float(argv[5]) # Exponential factor for variation of breeding ground attraction with time
-kT          = float(argv[6]) # Effective temperature of bird - high value increases randomness in path, lower value collapses to lowest energy state.
-start_month = int(argv[7])   # Start month defines the end of the breeding season when birds leave the breeding colony, whose position is defined by initial_lat and initial_lon
+#b           = float(argv[4]) # Relative contribution of breeding ground attraction potential to total potential where contribution of chlorophyll is 1
+#c           = float(argv[5]) # Exponential factor for variation of breeding ground attraction with time
+kT          = float(argv[4]) # Effective temperature of bird - high value increases randomness in path, lower value collapses to lowest energy state.
+start_month = int(argv[5])   # Start month defines the end of the breeding season when birds leave the breeding colony, whose position is defined by initial_lat and initial_lon
 
 bird_speed  = 60
 
 chloro_threshold = (0.0,99999)
 
-if len(argv) <= 8:
+if len(argv) <= 6:
     t_max = 30*24*12 #Full year
 else:
-    end_month   = int(argv[8])              # End month specified if we want to stop simulation before a full year.
+    end_month   = int(argv[6])              # End month specified if we want to stop simulation before a full year.
     if end_month < start_month:
         end_month = end_month+12
     t_max=(end_month-start_month+1)*30*24   #Number of hours in months specified
@@ -73,27 +73,27 @@ else:
     os.mkdir("../output_data")
 #Create folder for this particular run. If this set of parameters has been run before, program loops over run number until if finds a value that has not yet been used.
 run_number = 0
-run_folder = os.path.join("../output_data/","a"+str(a)+"b"+str(b)+"c"+str(c)+"kT"+str(kT)+"m"+str(start_month)+"-"+str(end_month)+"_Run"+str(run_number))
+run_folder = "../output_data/lat{:03.1f}_lon{:04.1f}_a{}_kT{}_m{:02d}-{:02d}_run{:02d}".format(initial_lat,initial_lon,argv[3],argv[4],start_month,end_month,run_number)
 while os.path.exists(run_folder):
     run_number = run_number + 1
-    run_folder = os.path.join("../output_data/","a"+str(a)+"b"+str(b)+"c"+str(c)+"kT"+str(kT)+"m"+str(start_month)+"-"+str(end_month)+"_Run"+str(run_number))
+    run_folder = "../output_data/lat{:03.1f}_lon{:04.1f}_a{}_kT{}_m{:02d}-{:02d}_run{:02d}".format(initial_lat,initial_lon,argv[3],argv[4],start_month,end_month,run_number)
 os.mkdir(run_folder)
 
 #Save run parameters
 parameterfile = open(os.path.join(run_folder,"parameters.txt"),'w')
 parameterfile.write("a  = "+str(a)+"\n")
-parameterfile.write("b  = "+str(b)+"\n")
-parameterfile.write("c  = "+str(c)+"\n")
+#parameterfile.write("b  = "+str(b)+"\n")
+#parameterfile.write("c  = "+str(c)+"\n")
 parameterfile.write("kt = "+str(kT)+"\n")
-parameterfile.write("t_max = "+str(t_max)+"\n")
 parameterfile.write("initialposition = "+argv[1]+", "+argv[2])
-parameterfile.write("\nstart_month = "+str(start_month)+"\nbird_speed = "+str(bird_speed))
+parameterfile.write("\nstart_month = "+str(start_month)+"\nend_month = "+str(end_month)+"\nbird_speed = "+str(bird_speed)+"\n")
+parameterfile.write("t_max = "+str(t_max)+"\n")
 parameterfile.write("Lower chlorophyll threshold = "+str(chloro_threshold[0])+"\n")
 parameterfile.write("Upper chlorophyll threshold = "+str(chloro_threshold[1])+"\n")
 parameterfile.close()
 #Save positions for t=0
-output_data_file = open(os.path.join(run_folder,"positiondata.csv"),'w')
-output_data_file.write(str(t)+","+str(currentposition[0])+","+str(currentposition[1])+"\n")
+#output_data_file = open(os.path.join(run_folder,"positiondata.csv"),'w')
+#output_data_file.write(str(t)+","+str(currentposition[0])+","+str(currentposition[1])+"\n")
 output_latlong_file = open(os.path.join(run_folder,"latlongdata.csv"),'w')
 currentlatlon = xytolatlong(currentposition)
 output_latlong_file.write(str(t)+","+str(currentlatlon[0])+","+str(currentlatlon[1])+"\n")
@@ -111,28 +111,27 @@ while t < t_max:
         resources_shape = np.shape(resources)
 
         #Threshold chloro data - only required if using raw data and not mean data
-        if "mean" in chloro_filename:
-            resources_filtered = np.asfortranarray(resources)
-        else:
-            resources_filtered = np.asfortranarray(np.zeros(resources_shape))
-            for i in range(0,resources_shape[0]):
-                for j in range(0,resources_shape[1]):
-                    if chloro_threshold[1] > resources[i,j] > chloro_threshold[0]:
-                        resources_filtered[i,j] = resources[i,j]
+        resources_filtered = np.asfortranarray(resources)
+
+        #resources_filtered = np.asfortranarray(np.zeros(resources_shape))
+        #for i in range(0,resources_shape[0]):
+        #    for j in range(0,resources_shape[1]):
+        #        if chloro_threshold[1] > resources[i,j] > chloro_threshold[0]:
+        #            resources_filtered[i,j] = resources[i,j]
 
         #Import wind data
         merid_filename = wind_merid_datafiles.pop(0)
         print(merid_filename)
-        wind_merid = np.asfortranarray(np.genfromtxt(merid_filename,delimiter=",")) #North to south wind speed
+        wind_merid = np.asfortranarray(np.genfromtxt(merid_filename)) #North to south wind speed
         zonal_filename = wind_zonal_datafiles.pop(0)
         print(zonal_filename)
-        wind_zonal = np.asfortranarray(np.genfromtxt(zonal_filename,delimiter=",")) #West to east wind speed
+        wind_zonal = np.asfortranarray(np.genfromtxt(zonal_filename)) #West to east wind speed
 
     #Calculate potentials in new possible states and convert to Boltzmann factors
     possible_state_boltzmann_factors = np.asfortranarray(np.zeros((3,3)))
 
     #Call boltzmanncalc subroutine from fortran_subroutines library to calculate boltzmann factors for possible states
-    fortran_subroutines.boltzmanncalc(possible_state_boltzmann_factors,currentposition[0],currentposition[1],initialposition[0],initialposition[1],earth,wind_merid[currentposition],wind_zonal[currentposition],resources_filtered,a,b,c,kT,t)
+    fortran_subroutines.boltzmanncalc(possible_state_boltzmann_factors,currentposition[0],currentposition[1],initialposition[0],initialposition[1],earth,wind_merid[currentposition],wind_zonal[currentposition],resources_filtered,a,0.0,0.0,kT,t)
 
     #Update position
     #Sum Boltzmann factors for possible states
@@ -171,6 +170,6 @@ while t < t_max:
 
     #Output data
     print(t,currentposition)
-    output_data_file.write(str(t)+","+str(currentposition[0])+","+str(currentposition[1])+"\n")
+    #output_data_file.write(str(t)+","+str(currentposition[0])+","+str(currentposition[1])+"\n")
     currentlatlon = xytolatlong(currentposition)
     output_latlong_file.write(str(t)+","+str(currentlatlon[0])+","+str(currentlatlon[1])+"\n")
