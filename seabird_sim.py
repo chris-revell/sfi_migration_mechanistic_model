@@ -23,7 +23,7 @@ start_month = int(argv[5])   # Start month defines the end of the breeding seaso
 
 bird_speed  = 60
 
-chloro_threshold = (0.0,99999)
+chloro_threshold = (0.0,10.0)#99999)
 
 if len(argv) <= 6:
     t_max = 30*24*12 #Full year
@@ -92,8 +92,8 @@ parameterfile.write("Lower chlorophyll threshold = "+str(chloro_threshold[0])+"\
 parameterfile.write("Upper chlorophyll threshold = "+str(chloro_threshold[1])+"\n")
 parameterfile.close()
 #Save positions for t=0
-#output_data_file = open(os.path.join(run_folder,"positiondata.csv"),'w')
-#output_data_file.write(str(t)+","+str(currentposition[0])+","+str(currentposition[1])+"\n")
+output_data_file = open(os.path.join(run_folder,"positiondata.csv"),'w')
+output_data_file.write(str(t)+","+str(currentposition[0])+","+str(currentposition[1])+"\n")
 output_latlong_file = open(os.path.join(run_folder,"latlongdata.csv"),'w')
 currentlatlon = xytolatlong(currentposition)
 output_latlong_file.write(str(t)+","+str(currentlatlon[0])+","+str(currentlatlon[1])+"\n")
@@ -170,6 +170,6 @@ while t < t_max:
 
     #Output data
     print(t,currentposition)
-    #output_data_file.write(str(t)+","+str(currentposition[0])+","+str(currentposition[1])+"\n")
+    output_data_file.write(str(t)+","+str(currentposition[0])+","+str(currentposition[1])+"\n")
     currentlatlon = xytolatlong(currentposition)
     output_latlong_file.write(str(t)+","+str(currentlatlon[0])+","+str(currentlatlon[1])+"\n")
