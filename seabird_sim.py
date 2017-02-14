@@ -111,13 +111,13 @@ while t < t_max:
         resources_shape = np.shape(resources)
 
         #Threshold chloro data - only required if using raw data and not mean data
-        resources_filtered = np.asfortranarray(resources)
+        #resources_filtered = np.asfortranarray(resources)
 
-        #resources_filtered = np.asfortranarray(np.zeros(resources_shape))
-        #for i in range(0,resources_shape[0]):
-        #    for j in range(0,resources_shape[1]):
-        #        if chloro_threshold[1] > resources[i,j] > chloro_threshold[0]:
-        #            resources_filtered[i,j] = resources[i,j]
+        resources_filtered = np.asfortranarray(np.zeros(resources_shape))
+        for i in range(0,resources_shape[0]):
+            for j in range(0,resources_shape[1]):
+                if chloro_threshold[1] > resources[i,j] > chloro_threshold[0] and earth[i,j] == 0:
+                    resources_filtered[i,j] = resources[i,j]
 
         #Import wind data
         merid_filename = wind_merid_datafiles.pop(0)
