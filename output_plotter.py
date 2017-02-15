@@ -7,8 +7,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 
-positiondata = np.genfromtxt(os.path.join(argv[1],"positiondata.csv"),delimiter=",")
-
+positiondata = np.genfromtxt(os.path.join(argv[1],"latlongdata.csv"),delimiter=",")
+"""
 #Import ground map
 earth = np.genfromtxt("earth.txt",delimiter=" ")
 lattice_shape = np.shape(earth)
@@ -30,15 +30,15 @@ ax3.tick_params(axis='both', which='both', bottom='off', top='off', labelbottom=
 ax3.set_xlim([0,lattice_shape[1]])
 ax3.set_ylim([lattice_shape[0],0])
 fig2.savefig(os.path.join(argv[1],"lattice.png"),format='png')
-
+"""
 
 #Create map of bird path on basemap
 from mpl_toolkits.basemap import Basemap
 map = Basemap(projection="robin",lon_0=0)
 map.fillcontinents(color='coral',lake_color='aqua')
 map.drawmapboundary(fill_color='aqua')
-lats = (lattice_shape[0]/2-positiondata[:,1]-0.5)*d_latlong
-lons = (positiondata[:,2]+0.5-lattice_shape[1]/2)*d_latlong
+lats = positiondata[:,1]#(lattice_shape[0]/2-positiondata[:,1]-0.5)*d_latlong
+lons = positiondata[:,2]#(positiondata[:,2]+0.5-lattice_shape[1]/2)*d_latlong
 x,y=map(lons,lats)
 map.scatter(x,y,color="black",s=0.5)
 plt.savefig(os.path.join(argv[1],"map.png"),format='png')

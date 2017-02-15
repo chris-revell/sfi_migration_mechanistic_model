@@ -92,8 +92,6 @@ parameterfile.write("\nstart_month = "+str(start_month)+"\nend_month = "+str(end
 parameterfile.write("t_max = "+str(t_max)+"\n")
 parameterfile.close()
 #Save positions for t=0
-output_data_file = open(os.path.join(run_folder,"positiondata.csv"),'w')
-output_data_file.write(str(t)+","+str(currentposition[0])+","+str(currentposition[1])+"\n")
 output_latlong_file = open(os.path.join(run_folder,"latlongdata.csv"),'w')
 currentlatlon = xytolatlong(currentposition)
 output_latlong_file.write(str(t)+","+str(currentlatlon[0])+","+str(currentlatlon[1])+"\n")
@@ -169,7 +167,6 @@ while t < t_max:
     t = t + dt
 
     #Output data
-    print(t,currentposition)
-    output_data_file.write(str(t)+","+str(currentposition[0])+","+str(currentposition[1])+"\n")
+    #print(t,currentposition)
     currentlatlon = xytolatlong(currentposition)
     output_latlong_file.write(str(t)+","+str(currentlatlon[0])+","+str(currentlatlon[1])+"\n")
