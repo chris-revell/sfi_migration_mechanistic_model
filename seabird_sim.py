@@ -1,5 +1,5 @@
 #!/Library/Frameworks/Python.framework/Versions/3.5/bin/python3
-from sys import argv
+from sys import argv,exit
 import numpy as np
 from random import random
 from math import sqrt
@@ -16,14 +16,10 @@ wind_zonal_datafiles = [os.path.join("data_wind",f) for f in os.listdir("data_wi
 initial_lat = float(argv[1])
 initial_lon = float(argv[2])
 a           = float(argv[3]) # Relative contribution of wind potential to total potential where contribution of chlorophyll is 1
-#b           = float(argv[4]) # Relative contribution of breeding ground attraction potential to total potential where contribution of chlorophyll is 1
-#c           = float(argv[5]) # Exponential factor for variation of breeding ground attraction with time
 kT          = float(argv[4]) # Effective temperature of bird - high value increases randomness in path, lower value collapses to lowest energy state.
 start_month = int(argv[5])   # Start month defines the end of the breeding season when birds leave the breeding colony, whose position is defined by initial_lat and initial_lon
 
 bird_speed  = 60
-
-chloro_threshold = (0.0,10.0)#99999)
 
 if len(argv) <= 6:
     t_max = 30*24*12 #Full year
@@ -37,20 +33,14 @@ else:
 def rotate(l, n):
     return l[n-1:] + l[:n-1]
 
+#Rotate datafile lists to begin with start_month
 chloro_datafiles = rotate(chloro_datafiles,start_month)
 wind_merid_datafiles = rotate(wind_merid_datafiles,start_month)
 wind_zonal_datafiles = rotate(wind_zonal_datafiles,start_month)
 
-#Import ground map
-earth = np.asfortranarray(np.genfromtxt("earth1440x720.CSV",delimiter=","))
+#Import earth map - earth[i,j]=1 for dry land, 0 for ocean. Used to restrict movement to ocean and mask chlorophyll from inland lakes.
+earth = np.asfortranarray(np.genfromtxt("earth.txt",delimiter=" "))
 resources_shape = np.shape(earth)
-for i in range(0,resources_shape[0]):
-    for j in range(0,resources_shape[1]):
-        if earth[i,j] == 99999:
-            earth[i,j] = 0
-        else:
-            earth[i,j] = 1
-
 
 d_latlong = 180/resources_shape[0] #Change in latitude and longitude angle per lattice point.
 
@@ -66,7 +56,21 @@ dt = 0.001  #As for t, initial value of dt is just an abritrary small value and 
 initialposition = (int(resources_shape[0]/2-initial_lat/d_latlong),int(resources_shape[1]/2+initial_lon/d_latlong))
 currentposition = initialposition
 
-#Create folder
+#Test that initial position is not trapped on dry land
+onearth = 1
+for i in range(3):
+    for j in range(3):
+        if i == 1 and j ==1:
+            pass
+        else:
+            if earth[initialposition[0]-1+i,initialposition[1]-1+j] == 0:
+                onearth = 0
+            else:
+                pass
+if onearth == 1:
+    exit("Error: Initial position is on dry land with no surrounding water - pick a different initial position\n")
+
+#Create general data folder if it does not already exist
 if os.path.exists("../output_data"):
     pass
 else:
@@ -82,14 +86,10 @@ os.mkdir(run_folder)
 #Save run parameters
 parameterfile = open(os.path.join(run_folder,"parameters.txt"),'w')
 parameterfile.write("a  = "+str(a)+"\n")
-#parameterfile.write("b  = "+str(b)+"\n")
-#parameterfile.write("c  = "+str(c)+"\n")
 parameterfile.write("kt = "+str(kT)+"\n")
 parameterfile.write("initialposition = "+argv[1]+", "+argv[2])
 parameterfile.write("\nstart_month = "+str(start_month)+"\nend_month = "+str(end_month)+"\nbird_speed = "+str(bird_speed)+"\n")
 parameterfile.write("t_max = "+str(t_max)+"\n")
-parameterfile.write("Lower chlorophyll threshold = "+str(chloro_threshold[0])+"\n")
-parameterfile.write("Upper chlorophyll threshold = "+str(chloro_threshold[1])+"\n")
 parameterfile.close()
 #Save positions for t=0
 output_data_file = open(os.path.join(run_folder,"positiondata.csv"),'w')
@@ -110,14 +110,14 @@ while t < t_max:
         resources = np.genfromtxt(chloro_filename,delimiter=",")
         resources_shape = np.shape(resources)
 
-        #Threshold chloro data - only required if using raw data and not mean data
-        #resources_filtered = np.asfortranarray(resources)
-
+        #Use ocean-earth map to exclude inland lakes from chlorophyll data
         resources_filtered = np.asfortranarray(np.zeros(resources_shape))
         for i in range(0,resources_shape[0]):
             for j in range(0,resources_shape[1]):
-                if chloro_threshold[1] > resources[i,j] > chloro_threshold[0] and earth[i,j] == 0:
+                if earth[i,j] == 0:
                     resources_filtered[i,j] = resources[i,j]
+                else:
+                    pass
 
         #Import wind data
         merid_filename = wind_merid_datafiles.pop(0)

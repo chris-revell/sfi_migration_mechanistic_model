@@ -10,14 +10,14 @@ import os
 positiondata = np.genfromtxt(os.path.join(argv[1],"positiondata.csv"),delimiter=",")
 
 #Import ground map
-earth = np.genfromtxt("earth1440x720.CSV",delimiter=",")
+earth = np.genfromtxt("earth.txt",delimiter=" ")
 lattice_shape = np.shape(earth)
-for i in range(0,lattice_shape[0]):
-    for j in range(0,lattice_shape[1]):
-        if earth[i,j] == 99999:
-            earth[i,j] = 0
-        else:
-            earth[i,j] = 1
+#for i in range(0,lattice_shape[0]):
+#    for j in range(0,lattice_shape[1]):
+#        if earth[i,j] == 99999:
+#            earth[i,j] = 0
+#        else:
+#            earth[i,j] = 1
 d_latlong = 180/lattice_shape[0]
 
 
