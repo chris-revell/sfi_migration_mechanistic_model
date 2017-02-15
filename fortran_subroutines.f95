@@ -30,7 +30,7 @@ subroutine boltzmanncalc(boltzmann_factors,currenta,currentb,initiala,initialb,e
         do k=1,resources_shape(1)
           do l=1,resources_shape(2)
             if (earth(k,l).EQ.0.AND.resources_filtered(k,l).GT.0.AND.k.NE.state_index(1).AND.l.NE.state_index(2)) then
-              state_potential = state_potential + resources_filtered(k,l)/(100000*realdistance(k,l,state_index(1),state_index(2)))
+              state_potential = state_potential + resources_filtered(k,l)/(realdistance(k,l,state_index(1),state_index(2)))
             endif
           enddo
         enddo

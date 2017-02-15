@@ -56,11 +56,7 @@ dt = 0.001  #As for t, initial value of dt is just an abritrary small value and 
 initialposition = (int(resources_shape[0]/2-initial_lat/d_latlong),int(resources_shape[1]/2+initial_lon/d_latlong))
 currentposition = initialposition
 
-#Apply a small random jiggle to the initial position
-#jiggle = (int(2*random())-1,int(2*random())-1)
-#currentposition = (initialposition[0]+int((-1)**jiggle[0]),initialposition[1]+int((-1)**jiggle[1]))
-
-#Test that initial position is not trapped on dry land
+#Test that the initial position is not trapped on dry land
 onearth = 1
 for i in range(3):
     for j in range(3):
@@ -135,7 +131,7 @@ while t < t_max:
 
     #Call boltzmanncalc subroutine from fortran_subroutines library to calculate boltzmann factors for possible states
     fortran_subroutines.boltzmanncalc(possible_state_boltzmann_factors,currentposition[0],currentposition[1],initialposition[0],initialposition[1],earth,wind_merid[currentposition],wind_zonal[currentposition],resources_filtered,a,0.0,0.0,kT,t)
-    
+
     #Update position
     #Sum Boltzmann factors for possible states
     boltzmann_sum = 0
