@@ -26,4 +26,4 @@ for i in runs:
     x,y=map(lons,lats)
     map.scatter(x,y,color="black",s=0.1)
 
-plt.savefig(os.path.join(parameterpath,parameterpath.split("/")[-1]+"_map.png"),format='png',dpi=500)
+plt.savefig(os.path.join(parameterpath,parameterpath.split("/")[-1]+"_map.png"),format='png',dpi=600)
