@@ -168,6 +168,6 @@ while t < t_max:
     t = t + dt
 
     #Output data
-    #print(t,currentposition)
+    print(t,currentposition)
     currentlatlon = xytolatlong(currentposition)
     output_latlong_file.write(str(t)+","+str(currentlatlon[0])+","+str(currentlatlon[1])+"\n")
