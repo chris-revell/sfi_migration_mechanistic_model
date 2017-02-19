@@ -18,15 +18,13 @@ Where the arguments are a list in the following order:
 initial_lat - Latitude of breeding location
 initial_lon - Longitude of breeding location
 a           - Relative contribution of wind potential to total potential where contribution of chlorophyll is 1
-b           - Relative contribution of breeding ground attraction potential to total potential where contribution of chlorophyll is 1
-c           - Exponential factor for variation of breeding ground attraction with time
+(b           - Relative contribution of breeding ground attraction potential to total potential where contribution of chlorophyll is 1)
+(c           - Exponential factor for variation of breeding ground attraction with time)
 kT          - Effective temperature of bird - high value increases randomness in path, lower value collapses to lowest energy state.
 start_month - Start month (range 1-12) defines the end of the breeding season when birds leave the breeding colony, whose position is defined by initial_lat and initial_lon
 end_month   - (Optional) specifies when to stop simulation if a full year is not required
 run         - Run label (integer) for when multiple runs with the same set of parameters are performed
 
-Things left to do:
-  - Improve chlorophyll potential. Restrict distance over which chlorophyll can exert attraction? Remove inland lakes without thresholding? Restrict to southern hemisphere data?
 
 Compile fortran subroutines with:
 f2py -c -m fortran_subroutines fortran_subroutines.f95
