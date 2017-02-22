@@ -1,4 +1,7 @@
 #!/Library/Frameworks/Python.framework/Versions/3.5/bin/python3
+
+# Christopher Revell, University of Cambridge, 2016
+
 from sys import argv,exit
 import numpy as np
 from random import random
@@ -77,11 +80,11 @@ if os.path.exists("../output_data"):
 else:
     os.mkdir("../output_data")
 #Create folder for this particular run. If this set of parameters has been run before, program loops over run number until if finds a value that has not yet been used.
-run_number = 0
-run_folder = "../output_data/lat{:03.1f}_lon{:04.1f}_a{}_kT{}_m{:02d}-{:02d}_run{:02d}".format(initial_lat,initial_lon,argv[3],argv[4],start_month,end_month,run_number)
-while os.path.exists(run_folder):
-    run_number = run_number + 1
-    run_folder = "../output_data/lat{:03.1f}_lon{:04.1f}_a{}_kT{}_m{:02d}-{:02d}_run{:02d}".format(initial_lat,initial_lon,argv[3],argv[4],start_month,end_month,run_number)
+run_number = int(argv[7])
+run_folder = "../output_data/lat{:03.1f}_lon{:04.1f}_a{:05.4f}_kT{:03.2f}_m{:02d}-{:02d}_run{:02d}".format(initial_lat,initial_lon,a,kT,start_month,end_month,run_number)
+#while os.path.exists(run_folder):
+#    run_number = run_number + 1
+#    run_folder = "../output_data/lat{:03.1f}_lon{:04.1f}_a{}_kT{}_m{:02d}-{:02d}_run{:02d}".format(initial_lat,initial_lon,argv[3],argv[4],start_month,end_month,run_number)
 os.mkdir(run_folder)
 
 #Save run parameters

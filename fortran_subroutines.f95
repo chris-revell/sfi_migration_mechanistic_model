@@ -1,3 +1,5 @@
+! Christopher Revell, University of Cambridge, 2016
+
 subroutine boltzmanncalc(boltzmann_factors,currenta,currentb,initiala,initialb,earth,wind_m,wind_z,resources_filtered,a,b,c,kT,t)
 
   integer*8                             :: i,j,k,l
