@@ -1,5 +1,7 @@
 #!/Library/Frameworks/Python.framework/Versions/3.5/bin/python3
 
+# Christopher Revell, University of Cambridge, 2016
+
 #Script to plot the output data from seabird_sim.py
 #Takes folder containing position data file as a command line argument.
 
@@ -15,7 +17,8 @@ runs = [f for f in os.listdir(parameterpath) if os.path.isdir(os.path.join(param
 
 #Create map of bird path on basemap
 from mpl_toolkits.basemap import Basemap
-map = Basemap(projection="robin",lon_0=0)
+#map = Basemap(projection="robin",lon_0=0)
+map = Basemap(projection="cyl",lon_0=0)
 map.fillcontinents(color='coral',lake_color='aqua')
 map.drawmapboundary(fill_color='aqua')
 
