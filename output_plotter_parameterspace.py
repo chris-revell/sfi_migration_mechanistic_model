@@ -77,6 +77,6 @@ for n,parameterpair in enumerate(parametersets):
         map.scatter(x,y,color=colors,s=0.1)
 
 
-#fig1.set_tight_layout(True)
+fig1.set_tight_layout(True)
 #fig1.subplots_adjust(wspace=0.05, hspace=0.05)
 fig1.savefig(os.path.join(datapath,datapath.split("/")[-1]+"_map.png"),format='png',dpi=1200,bbox_inches="tight")
