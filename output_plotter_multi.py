@@ -1,6 +1,6 @@
 #!/Library/Frameworks/Python.framework/Versions/3.5/bin/python3
 
-# Christopher Revell, University of Cambridge, 2016
+# Christopher Revell, University of Cambridge, 2017
 
 #Script to plot the output data from seabird_sim.py
 #Takes folder containing position data file as a command line argument.
@@ -41,4 +41,4 @@ for i in runs:
     x,y=map(lons,lats)
     map.scatter(x,y,color=colors,s=0.1)
 
-plt.savefig(os.path.join(parameterpath,parameterpath.split("/")[-1]+"_map.png"),format='png',dpi=600)
+plt.savefig(os.path.join(parameterpath,parameterpath.split("/")[-1]+"_map.png"),format='png',dpi=600,bbox_inches="tight")

@@ -32,4 +32,4 @@ map.drawmapboundary(fill_color='aqua')
 x,y=map(lons,lats)
 map.scatter(x,y,color=colors,s=0.1)
 
-plt.savefig(os.path.join(argv[1],"map.png"),format='png',dpi=600)
+plt.savefig(os.path.join(argv[1],"map.png"),format='png',dpi=600,bbox_inches="tight")

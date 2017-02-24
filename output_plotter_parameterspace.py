@@ -1,6 +1,6 @@
 #!/Library/Frameworks/Python.framework/Versions/3.5/bin/python3
 
-# Christopher Revell, University of Cambridge, 2016
+# Christopher Revell, University of Cambridge, 2017
 
 #Script to plot the output data from seabird_sim.py
 #Takes folder containing all datafolders for a given location, and uses data to plot the full parameter space.
@@ -10,6 +10,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 from mpl_toolkits.basemap import Basemap
+import matplotlib.gridspec as gridspec
 
 #Command line input gives path to directory containing datafolders
 datapath = argv[1]
@@ -40,9 +41,13 @@ for i in parametersets:
         kT_values.append(kT)
 kT_values.reverse()
 
-fig1 = plt.figure()
 subplotnumbera = len(kT_values)
 subplotnumberb = len(a_values)
+#fig1.set_tight_layout(True)
+
+fig1 = plt.figure(figsize=(2*subplotnumberb,subplotnumbera))
+#gs1 = gridspec.GridSpec(len(kT_values),len(a_values))
+#gs1.update(wspace=0.025, hspace=0.0)
 
 for n,parameterpair in enumerate(parametersets):
 
@@ -52,8 +57,9 @@ for n,parameterpair in enumerate(parametersets):
     #Create map of bird path on basemap as subplot
     subplotnumberc = a_values.index(a_order[n])+kT_values.index(kT_order[n])*len(a_values)
     print(subplotnumbera,subplotnumberb,subplotnumberc+1)
-    ax1 = fig1.add_subplot(subplotnumbera,subplotnumberb,subplotnumberc+1)
-    ax1.set_title("a="+str(a_order[n])+" kT="+str(kT_order[n]))
+    ax1 = fig1.add_subplot(subplotnumbera,subplotnumberb,subplotnumberc+1)         #    gs1[subplotnumberc]) #subplotnumbera,subplotnumberb,subplotnumberc+1)
+    #ax1.set_title("a="+str(a_order[n])+" kT="+str(kT_order[n]))
+    ax1.set_frame_on(False)
     map = Basemap(projection="cyl",lon_0=0)
     map.fillcontinents(color='coral',lake_color='aqua')
     map.drawmapboundary(fill_color='aqua')
@@ -74,9 +80,9 @@ for n,parameterpair in enumerate(parametersets):
         lats = positiondata[:,1]
         lons = positiondata[:,2]
         x,y=map(lons,lats)
-        map.scatter(x,y,color=colors,s=0.1)
+        map.scatter(x,y,color=colors,s=0.05)
 
 
-fig1.set_tight_layout(True)
-#fig1.subplots_adjust(wspace=0.05, hspace=0.05)
-fig1.savefig(os.path.join(datapath,datapath.split("/")[-1]+"_map.png"),format='png',dpi=1200,bbox_inches="tight")
+#fig1.set_tight_layout(True)
+fig1.subplots_adjust(wspace=0.0, hspace=0.0)
+fig1.savefig(os.path.join(datapath,datapath.split("/")[-1]+"_parameterspace.png"),format='png',dpi=1200,bbox_inches="tight")
