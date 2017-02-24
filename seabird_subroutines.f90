@@ -13,10 +13,12 @@ subroutine boltzmanncalc(boltzmann_factors,currenta,currentb,initiala,initialb,e
   real*8,dimension(2)                   :: wind_vector
   integer*8,dimension(2)                :: displacement_vector
   real*8                                :: state_potential,wind_magnitude,displacement_vector_magnitude,wind_mag_sq,disp_mag_sq
+  real*8                                :: min_potential
+  logical,dimension(3,3)                :: boltzmann_mask
 
   resources_shape = (/720,1440/)
 
-
+  boltzmann_mask(:,:) = .TRUE.
 
 !Calculate potentials in new possible states and convert to Boltzmann factors
 
@@ -24,9 +26,9 @@ subroutine boltzmanncalc(boltzmann_factors,currenta,currentb,initiala,initialb,e
     do j=1,3
       state_index = (/(currenta+i-2),MOD((currentb+j-2),resources_shape(2))/)
       if (i.EQ.2.AND.j.EQ.2) then
-          CYCLE
+          boltzmann_mask(i,j) = .FALSE.
       elseif (earth(state_index(1),state_index(2)).EQ.1) then
-          CYCLE
+          boltzmann_mask(i,j) = .FALSE.
       else
         state_potential = 0.0
         do k=1,resources_shape(1)
@@ -47,8 +49,20 @@ subroutine boltzmanncalc(boltzmann_factors,currenta,currentb,initiala,initialb,e
         breeding_dist_dif = realdistance(initiala,initialb,state_index(1),state_index(2)) &
                             - realdistance(initiala,initialb,currenta,currentb)
         state_potential = state_potential - SIGN(1.0,breeding_dist_dif)*b*(ABS(breeding_dist_dif))**(t*c/8760.0)
-        boltzmann_factors(i,j) = EXP(state_potential/kT)
+        boltzmann_factors(i,j) = state_potential/kT
       endif
+    enddo
+  enddo
+
+  min_potential = MINVAL(boltzmann_factors,MASK=boltzmann_mask)
+
+  do i=1,3
+    do j=1,3
+      if (boltzmann_mask(i,j)) then
+        boltzmann_factors(i,j) = EXP(boltzmann_factors(i,j)-min_potential)
+      else
+        boltzmann_factors(i,j) = 0
+      endif         
     enddo
   enddo
 

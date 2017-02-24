@@ -8,7 +8,7 @@ from random import random
 from math import sqrt
 import os
 import time
-import fortran_subroutines
+import seabird_subroutines
 
 #Find all datafiles
 chloro_datafiles = [os.path.join("data_chloro",f) for f in os.listdir("data_chloro") if f[-4:].lower()==".csv"]
@@ -82,9 +82,9 @@ else:
 #Create folder for this particular run. If this set of parameters has been run before, program loops over run number until if finds a value that has not yet been used.
 run_number = int(argv[7])
 run_folder = "../output_data/lat{:03.1f}_lon{:04.1f}_a{:05.4f}_kT{:03.2f}_m{:02d}-{:02d}_run{:02d}".format(initial_lat,initial_lon,a,kT,start_month,end_month,run_number)
-#while os.path.exists(run_folder):
-#    run_number = run_number + 1
-#    run_folder = "../output_data/lat{:03.1f}_lon{:04.1f}_a{}_kT{}_m{:02d}-{:02d}_run{:02d}".format(initial_lat,initial_lon,argv[3],argv[4],start_month,end_month,run_number)
+while os.path.exists(run_folder):
+    run_number = run_number + 1
+    run_folder = "../output_data/lat{:03.1f}_lon{:04.1f}_a{}_kT{}_m{:02d}-{:02d}_run{:02d}".format(initial_lat,initial_lon,argv[3],argv[4],start_month,end_month,run_number)
 os.mkdir(run_folder)
 
 #Save run parameters
@@ -132,9 +132,9 @@ while t < t_max:
     #Calculate potentials in new possible states and convert to Boltzmann factors
     possible_state_boltzmann_factors = np.asfortranarray(np.zeros((3,3)))
 
-    #Call boltzmanncalc subroutine from fortran_subroutines library to calculate boltzmann factors for possible states
-    fortran_subroutines.boltzmanncalc(possible_state_boltzmann_factors,currentposition[0],currentposition[1],initialposition[0],initialposition[1],earth,wind_merid[currentposition],wind_zonal[currentposition],resources_filtered,a,0.0,0.0,kT,t)
-
+    #Call boltzmanncalc subroutine from seabird_subroutines library to calculate boltzmann factors for possible states
+    seabird_subroutines.boltzmanncalc(possible_state_boltzmann_factors,currentposition[0],currentposition[1],initialposition[0],initialposition[1],earth,wind_merid[currentposition],wind_zonal[currentposition],resources_filtered,a,0.0,0.0,kT,t)
+    
     #Update position
     #Sum Boltzmann factors for possible states
     boltzmann_sum = 0
@@ -161,13 +161,13 @@ while t < t_max:
     #Update time
     wind_vector = np.array([wind_merid[currentposition],wind_zonal[currentposition]]) #In form [y,x] for ease of translation to np arrays.
     #Calculate dx vector on earth, not on euclidean lattice
-    theta = fortran_subroutines.realdistance(currentposition[0],currentposition[1],previousposition[0],currentposition[1])
-    zeta = fortran_subroutines.realdistance(currentposition[0],currentposition[1],currentposition[0],previousposition[1])
+    theta = seabird_subroutines.realdistance(currentposition[0],currentposition[1],previousposition[0],currentposition[1])
+    zeta = seabird_subroutines.realdistance(currentposition[0],currentposition[1],currentposition[0],previousposition[1])
     dx = np.array([theta,zeta])
 
     #Calculate speed including bird speed and wind component, then update time for moving between lattice points
     speed = bird_speed + np.dot(dx,wind_vector)/sqrt(np.dot(dx,dx))
-    dt = fortran_subroutines.realdistance(currentposition[0],currentposition[1],previousposition[0],previousposition[1])/speed
+    dt = seabird_subroutines.realdistance(currentposition[0],currentposition[1],previousposition[0],previousposition[1])/speed
     t = t + dt
 
     #Output data
