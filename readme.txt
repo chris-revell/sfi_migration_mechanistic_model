@@ -27,7 +27,7 @@ run         - Run label (integer) for when multiple runs with the same set of pa
 
 
 Compile fortran subroutines with:
-f2py -c -m fortran_subroutines fortran_subroutines.f95
+f2py -c -m seabird_subroutines seabird_subroutines.f95
 
 Overleaf document for this project:
 https://www.overleaf.com/7637608xxmqxvyychzv
@@ -35,6 +35,3 @@ https://www.overleaf.com/7637608xxmqxvyychzv
 Relevant for future work:
  - https://pypi.python.org/pypi/pyemd
  - http://pysal.readthedocs.io/en/latest/users/tutorials/dynamics.html
-
-
-

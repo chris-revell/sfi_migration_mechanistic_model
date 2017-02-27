@@ -14,6 +14,7 @@ import os
 positiondata = np.genfromtxt(os.path.join(argv[1],"latlongdata.csv"),delimiter=",")
 lats = positiondata[:,1]
 lons = positiondata[:,2]
+colors = []
 for i in range(np.shape(positiondata)[0]):
     if positiondata[i,0] < 720:
         colors.append("black")

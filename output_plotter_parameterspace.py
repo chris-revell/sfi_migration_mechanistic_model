@@ -14,6 +14,7 @@ import matplotlib.gridspec as gridspec
 
 #Command line input gives path to directory containing datafolders
 datapath = argv[1]
+location = datapath.split("/")[-1]
 
 #Find all datafolders in breeding location directory
 parametersets = [f for f in os.listdir(datapath) if os.path.isdir(os.path.join(datapath,f))]
@@ -58,7 +59,12 @@ for n,parameterpair in enumerate(parametersets):
     subplotnumberc = a_values.index(a_order[n])+kT_values.index(kT_order[n])*len(a_values)
     print(subplotnumbera,subplotnumberb,subplotnumberc+1)
     ax1 = fig1.add_subplot(subplotnumbera,subplotnumberb,subplotnumberc+1)         #    gs1[subplotnumberc]) #subplotnumbera,subplotnumberb,subplotnumberc+1)
-    #ax1.set_title("a="+str(a_order[n])+" kT="+str(kT_order[n]))
+
+    if subplotnumberc%subplotnumberb == 0:
+        ax1.set_ylabel("kT="+str(kT_order[n]))
+    if subplotnumberc >= (len(kT_values)-1)*len(a_values):
+        ax1.set_xlabel("a="+str(a_order[n]))
+
     ax1.set_frame_on(False)
     map = Basemap(projection="cyl",lon_0=0)
     map.fillcontinents(color='coral',lake_color='aqua')
@@ -84,5 +90,6 @@ for n,parameterpair in enumerate(parametersets):
 
 
 #fig1.set_tight_layout(True)
-fig1.subplots_adjust(wspace=0.0, hspace=0.0)
+fig1.suptitle(location.split("_")[0]+" "+location.split("_")[1]+" Parameter Space")
+fig1.subplots_adjust(wspace=0.015, hspace=0.03)
 fig1.savefig(os.path.join(datapath,datapath.split("/")[-1]+"_parameterspace.png"),format='png',dpi=1200,bbox_inches="tight")

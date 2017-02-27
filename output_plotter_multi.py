@@ -15,6 +15,20 @@ parameterpath = argv[1]
 #Find all datafolders in parameter directory
 runs = [f for f in os.listdir(parameterpath) if os.path.isdir(os.path.join(parameterpath,f))]
 
+parametercomponents = parameterpath.split("_")
+if "lat-52.3_lon169.1" in parameterpath:
+    location = "Campbell Island"
+elif "lat-51.0_lon-61.1" in parameterpath:
+    location = "Falkland Islands"
+elif "lat-49.4_lon70.0" in parameterpath:
+    location = "Iles Kerguelen"
+elif "lat-51.3_lon-75.2" in parameterpath:
+    location = "Islas Diego de Almagro"
+elif "lat-55.4_lon-69.3" in parameterpath:
+    location = "Islas Ildefonso"
+else:
+    location = "South Georgia"
+
 #Create map of bird path on basemap
 from mpl_toolkits.basemap import Basemap
 #map = Basemap(projection="robin",lon_0=0)
@@ -41,4 +55,5 @@ for i in runs:
     x,y=map(lons,lats)
     map.scatter(x,y,color=colors,s=0.1)
 
+plt.title(location+", a="+parametercomponents[-3][1:]+", kT="+parametercomponents[-2][2:])
 plt.savefig(os.path.join(parameterpath,parameterpath.split("/")[-1]+"_map.png"),format='png',dpi=600,bbox_inches="tight")
