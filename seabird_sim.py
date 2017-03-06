@@ -11,9 +11,14 @@ import time
 import seabird_subroutines
 
 #Find all datafiles
+"""
 chloro_datafiles = [os.path.join("data_chloro",f) for f in os.listdir("data_chloro") if f[-4:].lower()==".csv"]
 wind_merid_datafiles = [os.path.join("data_wind",f) for f in os.listdir("data_wind") if f[-4:].lower()==".txt" and "merid" in f]
 wind_zonal_datafiles = [os.path.join("data_wind",f) for f in os.listdir("data_wind") if f[-4:].lower()==".txt" and "zonal" in f]
+"""
+chloro_datafiles = ["data_chloro/chloromean01.csv", "data_chloro/chloromean02.csv", "data_chloro/chloromean03.csv", "data_chloro/chloromean04.csv", "data_chloro/chloromean05.csv", "data_chloro/chloromean06.csv", "data_chloro/chloromean07.csv", "data_chloro/chloromean08.csv", "data_chloro/chloromean09.csv", "data_chloro/chloromean10.csv", "data_chloro/chloromean11.csv", "data_chloro/chloromean12.csv"]
+wind_merid_datafiles = ["data_wind/merid_mean01.txt", "data_wind/merid_mean02.txt", "data_wind/merid_mean03.txt", "data_wind/merid_mean04.txt", "data_wind/merid_mean05.txt", "data_wind/merid_mean06.txt", "data_wind/merid_mean07.txt", "data_wind/merid_mean08.txt", "data_wind/merid_mean09.txt", "data_wind/merid_mean10.txt", "data_wind/merid_mean11.txt", "data_wind/merid_mean12.txt"]
+wind_zonal_datafiles = ["data_wind/zonal_mean01.txt", "data_wind/zonal_mean02.txt", "data_wind/zonal_mean03.txt", "data_wind/zonal_mean04.txt", "data_wind/zonal_mean05.txt", "data_wind/zonal_mean06.txt", "data_wind/zonal_mean07.txt", "data_wind/zonal_mean08.txt", "data_wind/zonal_mean09.txt", "data_wind/zonal_mean10.txt", "data_wind/zonal_mean11.txt", "data_wind/zonal_mean12.txt"]
 
 #Initial conditions
 initial_lat = float(argv[1])
@@ -134,7 +139,7 @@ while t < t_max:
 
     #Call boltzmanncalc subroutine from seabird_subroutines library to calculate boltzmann factors for possible states
     seabird_subroutines.boltzmanncalc(possible_state_boltzmann_factors,currentposition[0],currentposition[1],initialposition[0],initialposition[1],earth,wind_merid[currentposition],wind_zonal[currentposition],resources_filtered,a,0.0,0.0,kT,t)
-    
+
     #Update position
     #Sum Boltzmann factors for possible states
     boltzmann_sum = 0

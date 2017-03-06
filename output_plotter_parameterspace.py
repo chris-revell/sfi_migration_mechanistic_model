@@ -91,5 +91,5 @@ for n,parameterpair in enumerate(parametersets):
 
 #fig1.set_tight_layout(True)
 fig1.suptitle(location.split("_")[0]+" "+location.split("_")[1]+" Parameter Space")
-fig1.subplots_adjust(wspace=0.015, hspace=0.03)
+fig1.subplots_adjust(wspace=0.015, hspace=0.06)
 fig1.savefig(os.path.join(datapath,datapath.split("/")[-1]+"_parameterspace.png"),format='png',dpi=1200,bbox_inches="tight")
