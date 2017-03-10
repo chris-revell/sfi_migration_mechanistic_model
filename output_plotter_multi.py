@@ -53,7 +53,8 @@ for i in runs:
     lats = positiondata[:,1]
     lons = positiondata[:,2]
     x,y=map(lons,lats)
-    map.scatter(x,y,color=colors,s=0.1)
+    map.scatter(x,y,alpha=0.02,color="black",s=0.1)
+    #map.scatter(x,y,alpha=0.02,color=colors,s=0.1)
 
 plt.title(location+", a="+parametercomponents[-3][1:]+", kT="+parametercomponents[-2][2:])
-plt.savefig(os.path.join(parameterpath,parameterpath.split("/")[-1]+"_map.png"),format='png',dpi=600,bbox_inches="tight")
+plt.savefig(os.path.join(parameterpath,parameterpath.split("/")[-1]+"_map2.png"),format='png',dpi=600,bbox_inches="tight")
