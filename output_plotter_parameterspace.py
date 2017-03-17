@@ -88,9 +88,9 @@ for n,parameterpair in enumerate(parametersets):
         x,y=map(lons,lats)
         map.scatter(x,y,alpha=0.02,color="black",s=0.05)
         #map.scatter(x,y,alpha=0.02,color=colors,s=0.05)
-
-
-#fig1.set_tight_layout(True)
-fig1.suptitle(location.split("_")[0]+" "+location.split("_")[1]+" Parameter Space")
+    map.scatter(x[0],y[0],color="red",marker="*",s=5)
+    
+fig1.suptitle(" ".join((datapath.split("/")[-1]).split("_"))+" Parameter Space")
+#fig1.suptitle(location.split("_")[0]+" "+location.split("_")[1]+" Parameter Space")
 fig1.subplots_adjust(wspace=0.015, hspace=0.03)
-fig1.savefig(os.path.join(datapath,datapath.split("/")[-1]+"_parameterspace2.png"),format='png',dpi=1200,bbox_inches="tight")
+fig1.savefig(os.path.join(datapath,datapath.split("/")[-1]+"_parameterspace.png"),format='png',dpi=1200,bbox_inches="tight")

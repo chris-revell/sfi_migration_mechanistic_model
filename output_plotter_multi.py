@@ -26,6 +26,8 @@ elif "lat-51.3_lon-75.2" in parameterpath:
     location = "Islas Diego de Almagro"
 elif "lat-55.4_lon-69.3" in parameterpath:
     location = "Islas Ildefonso"
+elif "lat-46.3_lon51.6" in parameterpath:
+    location = "Crozet Islands"
 else:
     location = "South Georgia"
 
@@ -56,5 +58,6 @@ for i in runs:
     map.scatter(x,y,alpha=0.02,color="black",s=0.1)
     #map.scatter(x,y,alpha=0.02,color=colors,s=0.1)
 
-plt.title(location+", a="+parametercomponents[-3][1:]+", kT="+parametercomponents[-2][2:])
-plt.savefig(os.path.join(parameterpath,parameterpath.split("/")[-1]+"_map2.png"),format='png',dpi=600,bbox_inches="tight")
+#plt.title(location)
+map.scatter(x[0],y[0],color="red",marker="*",s=5)
+plt.savefig(os.path.join(parameterpath,parameterpath.split("/")[-1]+".png"),format='png',dpi=600,bbox_inches="tight")
