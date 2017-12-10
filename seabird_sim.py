@@ -5,7 +5,7 @@
 from sys import argv,exit
 import numpy as np
 from random import random
-from math import sqrt
+from math import sqrt,pi,sin,radians
 import os
 import time
 import seabird_subroutines
@@ -80,16 +80,16 @@ if onearth == 1:
 
 
 #Create general data folder if it does not already exist
-if os.path.exists("../output_data"):
+if os.path.exists("output_data"):
     pass
 else:
-    os.mkdir("../output_data")
+    os.mkdir("output_data")
 #Create folder for this particular run. If this set of parameters has been run before, program loops over run number until if finds a value that has not yet been used.
 run_number = int(argv[7])
-run_folder = "../output_data/lat{:03.1f}_lon{:04.1f}_a{:05.4f}_kT{:03.2f}_m{:02d}-{:02d}_run{:02d}".format(initial_lat,initial_lon,a,kT,start_month,end_month,run_number)
+run_folder = "output_data/lat{:03.1f}_lon{:04.1f}_a{:05.4f}_kT{:03.2f}_m{:02d}-{:02d}_run{:02d}".format(initial_lat,initial_lon,a,kT,start_month,end_month,run_number)
 while os.path.exists(run_folder):
     run_number = run_number + 1
-    run_folder = "../output_data/lat{:03.1f}_lon{:04.1f}_a{}_kT{}_m{:02d}-{:02d}_run{:02d}".format(initial_lat,initial_lon,argv[3],argv[4],start_month,end_month,run_number)
+    run_folder = "output_data/lat{:03.1f}_lon{:04.1f}_a{}_kT{}_m{:02d}-{:02d}_run{:02d}".format(initial_lat,initial_lon,argv[3],argv[4],start_month,end_month,run_number)
 os.mkdir(run_folder)
 
 #Save run parameters
@@ -120,9 +120,13 @@ while t < t_max:
         #Use ocean-earth map to exclude inland lakes from chlorophyll data
         resources_filtered = np.asfortranarray(np.zeros(resources_shape))
         for i in range(0,resources_shape[0]):
+#            lat1 = radians(xytolatlong([i,1])[0]-d_latlong/2)
+#            lat2 = lat1 + radians(d_latlong)
+#            area = (6371.0**2)*abs(sin(lat1)-sin(lat2))*abs(radians(d_latlong))
+#            print(i,area)
             for j in range(0,resources_shape[1]):
                 if earth[i,j] == 0:
-                    resources_filtered[i,j] = resources[i,j]
+                    resources_filtered[i,j] = resources[i,j]#*area
                 else:
                     pass
 

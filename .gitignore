@@ -2,3 +2,4 @@
 *.so
 *.o
 *.Rapp.history
+output_data/*
