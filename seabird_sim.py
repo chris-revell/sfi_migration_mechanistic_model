@@ -11,14 +11,14 @@ import time
 import seabird_subroutines
 
 #Find all datafiles
-"""
-chloro_datafiles = [os.path.join("data_chloro",f) for f in os.listdir("data_chloro") if f[-4:].lower()==".csv"]
-wind_merid_datafiles = [os.path.join("data_wind",f) for f in os.listdir("data_wind") if f[-4:].lower()==".txt" and "merid" in f]
-wind_zonal_datafiles = [os.path.join("data_wind",f) for f in os.listdir("data_wind") if f[-4:].lower()==".txt" and "zonal" in f]
-"""
 chloro_datafiles = ["data_chloro/chloromean01.csv", "data_chloro/chloromean02.csv", "data_chloro/chloromean03.csv", "data_chloro/chloromean04.csv", "data_chloro/chloromean05.csv", "data_chloro/chloromean06.csv", "data_chloro/chloromean07.csv", "data_chloro/chloromean08.csv", "data_chloro/chloromean09.csv", "data_chloro/chloromean10.csv", "data_chloro/chloromean11.csv", "data_chloro/chloromean12.csv"]
 wind_merid_datafiles = ["data_wind/merid_mean01.txt", "data_wind/merid_mean02.txt", "data_wind/merid_mean03.txt", "data_wind/merid_mean04.txt", "data_wind/merid_mean05.txt", "data_wind/merid_mean06.txt", "data_wind/merid_mean07.txt", "data_wind/merid_mean08.txt", "data_wind/merid_mean09.txt", "data_wind/merid_mean10.txt", "data_wind/merid_mean11.txt", "data_wind/merid_mean12.txt"]
 wind_zonal_datafiles = ["data_wind/zonal_mean01.txt", "data_wind/zonal_mean02.txt", "data_wind/zonal_mean03.txt", "data_wind/zonal_mean04.txt", "data_wind/zonal_mean05.txt", "data_wind/zonal_mean06.txt", "data_wind/zonal_mean07.txt", "data_wind/zonal_mean08.txt", "data_wind/zonal_mean09.txt", "data_wind/zonal_mean10.txt", "data_wind/zonal_mean11.txt", "data_wind/zonal_mean12.txt"]
+
+class bird:
+    def __init__(self,position):
+        self.position = position
+    velocity = [0,0]
 
 #Initial conditions
 initial_lat = float(argv[1])
@@ -28,6 +28,9 @@ kT          = float(argv[4]) # Effective temperature of bird - high value increa
 start_month = int(argv[5])   # Start month defines the end of the breeding season when birds leave the breeding colony, whose position is defined by initial_lat and initial_lon
 
 bird_speed  = 60
+
+migratingbird = bird([initial_lat,initial_lon])
+
 
 if len(argv) <= 6:
     t_max = 30*24*12 #Full year
@@ -50,33 +53,33 @@ wind_zonal_datafiles = rotate(wind_zonal_datafiles,start_month)
 earth = np.asfortranarray(np.genfromtxt("earth.txt",delimiter=" "))
 resources_shape = np.shape(earth)
 
-d_latlong = 180/resources_shape[0] #Change in latitude and longitude angle per lattice point.
-
-#Define function to convert lattice positions to latitude and longitude values.
-def xytolatlong(xy):
-    lat = (resources_shape[0]/2.0-xy[0]-0.5)*d_latlong
-    lon = (xy[1]+0.5-resources_shape[1]/2.0)*d_latlong
-    return (lat,lon)
+#d_latlong = 180/resources_shape[0] #Change in latitude and longitude angle per lattice point.
+#
+##Define function to convert lattice positions to latitude and longitude values.
+#def xytolatlong(xy):
+#    lat = (resources_shape[0]/2.0-xy[0]-0.5)*d_latlong
+#    lon = (xy[1]+0.5-resources_shape[1]/2.0)*d_latlong
+#    return (lat,lon)
 
 #Initialise system time and position.
-t=0.00001   #This needs to be close to but not equal to 0 for import loop later
+#t=0.00001   #This needs to be close to but not equal to 0 for import loop later
 dt = 0.001  #As for t, initial value of dt is just an abritrary small value and will be recalculated during simulations.
-initialposition = (int(resources_shape[0]/2-initial_lat/d_latlong),int(resources_shape[1]/2+initial_lon/d_latlong))
-currentposition = initialposition
+#initialposition = (int(resources_shape[0]/2-initial_lat/d_latlong),int(resources_shape[1]/2+initial_lon/d_latlong))
+#currentposition = initialposition
 
 #Test that the initial position is not trapped on dry land
-onearth = 1
-for i in range(3):
-    for j in range(3):
-        if i == 1 and j ==1:
-            pass
-        else:
-            if earth[initialposition[0]-1+i,initialposition[1]-1+j] == 0:
-                onearth = 0
-            else:
-                pass
-if onearth == 1:
-    exit("Error: Initial position is on dry land with no surrounding water - pick a different initial position\n")
+#onearth = 1
+#for i in range(3):
+#    for j in range(3):
+#        if i == 1 and j ==1:
+#            pass
+#        else:
+#            if earth[initialposition[0]-1+i,initialposition[1]-1+j] == 0:
+#                onearth = 0
+#            else:
+#                pass
+#if onearth == 1:
+#    exit("Error: Initial position is on dry land with no surrounding water - pick a different initial position\n")
 
 
 #Create general data folder if it does not already exist
@@ -139,33 +142,33 @@ while t < t_max:
         wind_zonal = np.asfortranarray(np.genfromtxt(zonal_filename)) #West to east wind speed
 
     #Calculate potentials in new possible states and convert to Boltzmann factors
-    possible_state_boltzmann_factors = np.asfortranarray(np.zeros((3,3)))
+    #possible_state_boltzmann_factors = np.asfortranarray(np.zeros((3,3)))
 
     #Call boltzmanncalc subroutine from seabird_subroutines library to calculate boltzmann factors for possible states
     seabird_subroutines.boltzmanncalc(possible_state_boltzmann_factors,currentposition[0],currentposition[1],initialposition[0],initialposition[1],earth,wind_merid[currentposition],wind_zonal[currentposition],resources_filtered,a,0.0,0.0,kT,t)
 
     #Update position
     #Sum Boltzmann factors for possible states
-    boltzmann_sum = 0
-    for i in range(0,3):
-        for j in range(0,3):
-            boltzmann_sum = boltzmann_sum + possible_state_boltzmann_factors[i,j]
+    #boltzmann_sum = 0
+    #for i in range(0,3):
+    #    for j in range(0,3):
+    #        boltzmann_sum = boltzmann_sum + possible_state_boltzmann_factors[i,j]
     #Use a random number generator and probabilities defined by Boltzmann factors to decide which lattice point the bird moves to next
-    probability_sum = 0
-    random_number = boltzmann_sum*random()
+    #probability_sum = 0
+    #random_number = boltzmann_sum*random()
     #Use the moved variable to ensure that the bird can only move once, otherwise the loop below cannot be exited cleanly and the bird will be moved multiple times.
-    moved = 0
-    for i in range(0,3):
-        for j in range(0,3):
-            probability_sum = probability_sum + possible_state_boltzmann_factors[i,j]
-            if moved == 0:
-                if random_number < probability_sum:
-                    currentposition = (currentposition[0]+i-1,(currentposition[1]+j-1)%resources_shape[1]) # Use of mod % allows birds to move off one side of the grid and appear at the other. Ignore north and south poles for now because birds should never reach this point.
-                    moved = 1
-                else:
-                    pass
-            else:
-                pass
+    #moved = 0
+    #for i in range(0,3):
+    #    for j in range(0,3):
+    #        probability_sum = probability_sum + possible_state_boltzmann_factors[i,j]
+    #        if moved == 0:
+    #            if random_number < probability_sum:
+    #                currentposition = (currentposition[0]+i-1,(currentposition[1]+j-1)%resources_shape[1]) # Use of mod % allows birds to move off one side of the grid and appear at the other. Ignore north and south poles for now because birds should never reach this point.
+    #                moved = 1
+    #            else:
+    #                pass
+    #        else:
+    #            pass
 
     #Update time
     wind_vector = np.array([wind_merid[currentposition],wind_zonal[currentposition]]) #In form [y,x] for ease of translation to np arrays.
