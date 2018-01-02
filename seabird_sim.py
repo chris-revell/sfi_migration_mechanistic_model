@@ -53,17 +53,17 @@ wind_zonal_datafiles = rotate(wind_zonal_datafiles,start_month)
 earth = np.asfortranarray(np.genfromtxt("earth.txt",delimiter=" "))
 resources_shape = np.shape(earth)
 
-#d_latlong = 180/resources_shape[0] #Change in latitude and longitude angle per lattice point.
+d_latlong = 180/resources_shape[0] #Change in latitude and longitude angle per lattice point.
 #
 ##Define function to convert lattice positions to latitude and longitude values.
-#def xytolatlong(xy):
-#    lat = (resources_shape[0]/2.0-xy[0]-0.5)*d_latlong
-#    lon = (xy[1]+0.5-resources_shape[1]/2.0)*d_latlong
-#    return (lat,lon)
+def xytolatlong(xy):
+    lat = (resources_shape[0]/2.0-xy[0]-0.5)*d_latlong
+    lon = (xy[1]+0.5-resources_shape[1]/2.0)*d_latlong
+    return (lat,lon)
 
 #Initialise system time and position.
 #t=0.00001   #This needs to be close to but not equal to 0 for import loop later
-dt = 0.001  #As for t, initial value of dt is just an abritrary small value and will be recalculated during simulations.
+dt = 1  #As for t, initial value of dt is just an abritrary small value and will be recalculated during simulations.
 #initialposition = (int(resources_shape[0]/2-initial_lat/d_latlong),int(resources_shape[1]/2+initial_lon/d_latlong))
 #currentposition = initialposition
 
@@ -105,12 +105,13 @@ parameterfile.write("t_max = "+str(t_max)+"\n")
 parameterfile.close()
 #Save positions for t=0
 output_latlong_file = open(os.path.join(run_folder,"latlongdata.csv"),'w')
-currentlatlon = xytolatlong(currentposition)
-output_latlong_file.write(str(t)+","+str(currentlatlon[0])+","+str(currentlatlon[1])+"\n")
+currentlatlon = xytolatlong(migratingbird.position)
+output_latlong_file.write(str(0.0)+","+str(currentlatlon[0])+","+str(currentlatlon[1])+"\n")
 
+t=0
 while t < t_max:
 
-    previousposition = currentposition
+    currentposition = migratingbird.position
 
     if t%720 < dt:
         #Refresh data arrays every 720 hours (~1 month)
@@ -144,45 +145,26 @@ while t < t_max:
     #Calculate potentials in new possible states and convert to Boltzmann factors
     #possible_state_boltzmann_factors = np.asfortranarray(np.zeros((3,3)))
 
+    wind_merid_current = wind_merid[int(resources_shape[0]/2-migratingbird.position[0]/d_latlong),int(resources_shape[1]/2+migratingbird.position[1]/d_latlong)]
+    wind_merid_current = wind_merid[int(resources_shape[0]/2-migratingbird.position[0]/d_latlong),int(resources_shape[1]/2+migratingbird.position[1]/d_latlong)]
+
     #Call boltzmanncalc subroutine from seabird_subroutines library to calculate boltzmann factors for possible states
-    seabird_subroutines.boltzmanncalc(possible_state_boltzmann_factors,currentposition[0],currentposition[1],initialposition[0],initialposition[1],earth,wind_merid[currentposition],wind_zonal[currentposition],resources_filtered,a,0.0,0.0,kT,t)
+    force = np.asfortranarray(np.zeros((2)))
+    seabird_subroutines.forcecalc(force,currentposition[0],currentposition[1],wind_merid_current,resources_filtered)#wind_zonal_current,resources_filtered,a)
 
-    #Update position
-    #Sum Boltzmann factors for possible states
-    #boltzmann_sum = 0
-    #for i in range(0,3):
-    #    for j in range(0,3):
-    #        boltzmann_sum = boltzmann_sum + possible_state_boltzmann_factors[i,j]
-    #Use a random number generator and probabilities defined by Boltzmann factors to decide which lattice point the bird moves to next
-    #probability_sum = 0
-    #random_number = boltzmann_sum*random()
-    #Use the moved variable to ensure that the bird can only move once, otherwise the loop below cannot be exited cleanly and the bird will be moved multiple times.
-    #moved = 0
-    #for i in range(0,3):
-    #    for j in range(0,3):
-    #        probability_sum = probability_sum + possible_state_boltzmann_factors[i,j]
-    #        if moved == 0:
-    #            if random_number < probability_sum:
-    #                currentposition = (currentposition[0]+i-1,(currentposition[1]+j-1)%resources_shape[1]) # Use of mod % allows birds to move off one side of the grid and appear at the other. Ignore north and south poles for now because birds should never reach this point.
-    #                moved = 1
-    #            else:
-    #                pass
-    #        else:
-    #            pass
 
-    #Update time
-    wind_vector = np.array([wind_merid[currentposition],wind_zonal[currentposition]]) #In form [y,x] for ease of translation to np arrays.
+    #Update time. Calculate speed including bird speed and wind component, then update time for moving between lattice points
     #Calculate dx vector on earth, not on euclidean lattice
-    theta = seabird_subroutines.realdistance(currentposition[0],currentposition[1],previousposition[0],currentposition[1])
-    zeta = seabird_subroutines.realdistance(currentposition[0],currentposition[1],currentposition[0],previousposition[1])
-    dx = np.array([theta,zeta])
+    #wind_vector = np.array([wind_merid[currentposition],wind_zonal[currentposition]]) #In form [y,x] for ease of translation to np arrays.
+    #theta = seabird_subroutines.realdistance(currentposition[0],currentposition[1],previousposition[0],currentposition[1])
+    #zeta = seabird_subroutines.realdistance(currentposition[0],currentposition[1],currentposition[0],previousposition[1])
+    #dx = np.array([theta,zeta])
+    #speed = bird_speed + np.dot(dx,wind_vector)/sqrt(np.dot(dx,dx))
 
-    #Calculate speed including bird speed and wind component, then update time for moving between lattice points
-    speed = bird_speed + np.dot(dx,wind_vector)/sqrt(np.dot(dx,dx))
-    dt = seabird_subroutines.realdistance(currentposition[0],currentposition[1],previousposition[0],previousposition[1])/speed
+    migratingbird.position = migratingbird.position + force*dt
     t = t + dt
 
     #Output data
-    print(t,currentposition)
-    currentlatlon = xytolatlong(currentposition)
+    print(t,migratingbird.position)
+    currentlatlon = xytolatlong(migratingbird.position)
     output_latlong_file.write(str(t)+","+str(currentlatlon[0])+","+str(currentlatlon[1])+"\n")
