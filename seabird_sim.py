@@ -8,7 +8,7 @@ from random import random
 from math import sqrt,pi,sin,radians
 import os
 import time
-import seabird_subroutines
+import seabirdsubroutines
 
 #Find all datafiles
 chloro_datafiles = ["data_chloro/chloromean01.csv", "data_chloro/chloromean02.csv", "data_chloro/chloromean03.csv", "data_chloro/chloromean04.csv", "data_chloro/chloromean05.csv", "data_chloro/chloromean06.csv", "data_chloro/chloromean07.csv", "data_chloro/chloromean08.csv", "data_chloro/chloromean09.csv", "data_chloro/chloromean10.csv", "data_chloro/chloromean11.csv", "data_chloro/chloromean12.csv"]
@@ -34,6 +34,7 @@ migratingbird = bird([initial_lat,initial_lon])
 
 if len(argv) <= 6:
     t_max = 30*24*12 #Full year
+    end_month = start_month-1
 else:
     end_month   = int(argv[6])              # End month specified if we want to stop simulation before a full year.
     if end_month < start_month:
@@ -88,7 +89,7 @@ if os.path.exists("output_data"):
 else:
     os.mkdir("output_data")
 #Create folder for this particular run. If this set of parameters has been run before, program loops over run number until if finds a value that has not yet been used.
-run_number = int(argv[7])
+run_number = 0
 run_folder = "output_data/lat{:03.1f}_lon{:04.1f}_a{:05.4f}_kT{:03.2f}_m{:02d}-{:02d}_run{:02d}".format(initial_lat,initial_lon,a,kT,start_month,end_month,run_number)
 while os.path.exists(run_folder):
     run_number = run_number + 1
@@ -149,15 +150,15 @@ while t < t_max:
     wind_merid_current = wind_merid[int(resources_shape[0]/2-migratingbird.position[0]/d_latlong),int(resources_shape[1]/2+migratingbird.position[1]/d_latlong)]
 
     #Call boltzmanncalc subroutine from seabird_subroutines library to calculate boltzmann factors for possible states
-    force = np.asfortranarray(np.zeros((2)))
-    seabird_subroutines.forcecalc(force,currentposition[0],currentposition[1],wind_merid_current,resources_filtered)#wind_zonal_current,resources_filtered,a)
+    force = np.asfortranarray(np.zeros((2),dtype='float32'))
+    seabirdsubroutines.seabird_subroutines.forcecalc(force,currentposition[0],currentposition[1],resources_filtered)#wind_merid_current,wind_zonal_current,resources_filtered,a)
 
 
     #Update time. Calculate speed including bird speed and wind component, then update time for moving between lattice points
     #Calculate dx vector on earth, not on euclidean lattice
     #wind_vector = np.array([wind_merid[currentposition],wind_zonal[currentposition]]) #In form [y,x] for ease of translation to np arrays.
-    #theta = seabird_subroutines.realdistance(currentposition[0],currentposition[1],previousposition[0],currentposition[1])
-    #zeta = seabird_subroutines.realdistance(currentposition[0],currentposition[1],currentposition[0],previousposition[1])
+    #theta = seabirdsubroutines.seabird_subroutines.realdistance(currentposition[0],currentposition[1],previousposition[0],currentposition[1])
+    #zeta = seabirdsubroutines.seabird_subroutines.realdistance(currentposition[0],currentposition[1],currentposition[0],previousposition[1])
     #dx = np.array([theta,zeta])
     #speed = bird_speed + np.dot(dx,wind_vector)/sqrt(np.dot(dx,dx))
 
@@ -165,6 +166,5 @@ while t < t_max:
     t = t + dt
 
     #Output data
-    print(t,migratingbird.position)
-    currentlatlon = xytolatlong(migratingbird.position)
-    output_latlong_file.write(str(t)+","+str(currentlatlon[0])+","+str(currentlatlon[1])+"\n")
+    print(t,migratingbird.position[0],migratingbird.position[1])
+    output_latlong_file.write('{:08.4f}, {:08.4f}, {:08.4f}\n'.format(t,migratingbird.position[0],migratingbird.position[1]))
