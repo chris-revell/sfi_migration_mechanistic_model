@@ -5,7 +5,7 @@
 from sys import argv,exit
 import numpy as np
 from random import random
-from math import sqrt,pi,sin,radians
+from math import sqrt,pi,sin,radians,cos
 import os
 import time
 import seabirdsubroutines
@@ -55,33 +55,18 @@ earth = np.asfortranarray(np.genfromtxt("earth.txt",delimiter=" "))
 resources_shape = np.shape(earth)
 
 d_latlong = 180/resources_shape[0] #Change in latitude and longitude angle per lattice point.
-#
-##Define function to convert lattice positions to latitude and longitude values.
+
+#Define functions to convert lattice positions to latitude and longitude values and vice versa
 def xytolatlong(xy):
     lat = (resources_shape[0]/2.0-xy[0]-0.5)*d_latlong
     lon = (xy[1]+0.5-resources_shape[1]/2.0)*d_latlong
     return (lat,lon)
+def latlongtoxy(lat,lon):
+    x = int(lon/d_latlong)+resources_shape[1]/2.0
+    y = resources_shape[0]/2.0-int(lat/d_latlong)
+    return (int(y),int(x))
 
-#Initialise system time and position.
-#t=0.00001   #This needs to be close to but not equal to 0 for import loop later
-dt = 1  #As for t, initial value of dt is just an abritrary small value and will be recalculated during simulations.
-#initialposition = (int(resources_shape[0]/2-initial_lat/d_latlong),int(resources_shape[1]/2+initial_lon/d_latlong))
-#currentposition = initialposition
-
-#Test that the initial position is not trapped on dry land
-#onearth = 1
-#for i in range(3):
-#    for j in range(3):
-#        if i == 1 and j ==1:
-#            pass
-#        else:
-#            if earth[initialposition[0]-1+i,initialposition[1]-1+j] == 0:
-#                onearth = 0
-#            else:
-#                pass
-#if onearth == 1:
-#    exit("Error: Initial position is on dry land with no surrounding water - pick a different initial position\n")
-
+dt = 1
 
 #Create general data folder if it does not already exist
 if os.path.exists("output_data"):
@@ -98,16 +83,12 @@ os.mkdir(run_folder)
 
 #Save run parameters
 parameterfile = open(os.path.join(run_folder,"parameters.txt"),'w')
-parameterfile.write("a  = "+str(a)+"\n")
-parameterfile.write("kt = "+str(kT)+"\n")
-parameterfile.write("initialposition = "+argv[1]+", "+argv[2])
-parameterfile.write("\nstart_month = "+str(start_month)+"\nend_month = "+str(end_month)+"\nbird_speed = "+str(bird_speed)+"\n")
-parameterfile.write("t_max = "+str(t_max)+"\n")
+parameterfile.write("a  = {}\n""kt = {}\n""initialposition = {}, {}\nstart_month = {}\nend_month = {}\nbird_speed = {}\n""t_max = {}\n".format(str(a),str(kT),argv[1],argv[2],str(start_month),str(end_month),str(bird_speed),str(t_max)))
 parameterfile.close()
 #Save positions for t=0
 output_latlong_file = open(os.path.join(run_folder,"latlongdata.csv"),'w')
 currentlatlon = xytolatlong(migratingbird.position)
-output_latlong_file.write(str(0.0)+","+str(currentlatlon[0])+","+str(currentlatlon[1])+"\n")
+output_latlong_file.write("{:08.4f}, {:08.4f}, {:08.4f}\n".format(0.0,currentlatlon[0],currentlatlon[1]))
 
 t=0
 while t < t_max:
@@ -143,16 +124,16 @@ while t < t_max:
         print(zonal_filename)
         wind_zonal = np.asfortranarray(np.genfromtxt(zonal_filename)) #West to east wind speed
 
-    #Calculate potentials in new possible states and convert to Boltzmann factors
-    #possible_state_boltzmann_factors = np.asfortranarray(np.zeros((3,3)))
-
-    wind_merid_current = wind_merid[int(resources_shape[0]/2-migratingbird.position[0]/d_latlong),int(resources_shape[1]/2+migratingbird.position[1]/d_latlong)]
-    wind_merid_current = wind_merid[int(resources_shape[0]/2-migratingbird.position[0]/d_latlong),int(resources_shape[1]/2+migratingbird.position[1]/d_latlong)]
-
-    #Call boltzmanncalc subroutine from seabird_subroutines library to calculate boltzmann factors for possible states
     force = np.asfortranarray(np.zeros((2),dtype='float32'))
     seabirdsubroutines.seabird_subroutines.forcecalc(force,currentposition[0],currentposition[1],resources_filtered)#wind_merid_current,wind_zonal_current,resources_filtered,a)
-
+    currentwindlatticeposition = latlongtoxy(currentposition[0],currentposition[1])
+    wind_merid_current = wind_merid[currentwindlatticeposition]
+    wind_zonal_current = wind_zonal[currentwindlatticeposition]
+    windforce = np.asfortranarray(np.array([wind_merid_current,wind_zonal_current]))
+    stochasticvals = [random(),2*pi*random()]
+    stochasticforce = np.asfortranarray(np.array([stochasticvals[0]*sin(stochasticvals[1]),stochasticvals[0]*cos(stochasticvals[1])]))
+    print(stochasticforce)
+    force = force + a*windforce + kT*stochasticforce
 
     #Update time. Calculate speed including bird speed and wind component, then update time for moving between lattice points
     #Calculate dx vector on earth, not on euclidean lattice
@@ -162,6 +143,7 @@ while t < t_max:
     #dx = np.array([theta,zeta])
     #speed = bird_speed + np.dot(dx,wind_vector)/sqrt(np.dot(dx,dx))
 
+    #Treat bird as particle moving with overdamped Langevin dynamics
     migratingbird.position = migratingbird.position + force*dt
     t = t + dt
 
