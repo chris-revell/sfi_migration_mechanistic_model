@@ -106,10 +106,6 @@ while t < t_max:
         #Use ocean-earth map to exclude inland lakes from chlorophyll data
         resources_filtered = np.asfortranarray(np.zeros(resources_shape))
         for i in range(0,resources_shape[0]):
-#            lat1 = radians(xytolatlong([i,1])[0]-d_latlong/2)
-#            lat2 = lat1 + radians(d_latlong)
-#            area = (6371.0**2)*abs(sin(lat1)-sin(lat2))*abs(radians(d_latlong))
-#            print(i,area)
             for j in range(0,resources_shape[1]):
                 if earth[i,j] == 0:
                     resources_filtered[i,j] = resources[i,j]#*area
@@ -124,24 +120,20 @@ while t < t_max:
         print(zonal_filename)
         wind_zonal = np.asfortranarray(np.genfromtxt(zonal_filename)) #West to east wind speed
 
+    #Calculate force
     force = np.asfortranarray(np.zeros((2),dtype='float32'))
+    #Call fortran subroutine for resources component
     seabirdsubroutines.seabird_subroutines.forcecalc(force,currentposition[0],currentposition[1],resources_filtered)#wind_merid_current,wind_zonal_current,resources_filtered,a)
+    #Calculate wind component
     currentwindlatticeposition = latlongtoxy(currentposition[0],currentposition[1])
     wind_merid_current = wind_merid[currentwindlatticeposition]
     wind_zonal_current = wind_zonal[currentwindlatticeposition]
     windforce = np.asfortranarray(np.array([wind_merid_current,wind_zonal_current]))
+    #Calculate stochastic component
     stochasticvals = [random(),2*pi*random()]
     stochasticforce = np.asfortranarray(np.array([stochasticvals[0]*sin(stochasticvals[1]),stochasticvals[0]*cos(stochasticvals[1])]))
-    print(stochasticforce)
+    #Sum components
     force = force + a*windforce + kT*stochasticforce
-
-    #Update time. Calculate speed including bird speed and wind component, then update time for moving between lattice points
-    #Calculate dx vector on earth, not on euclidean lattice
-    #wind_vector = np.array([wind_merid[currentposition],wind_zonal[currentposition]]) #In form [y,x] for ease of translation to np arrays.
-    #theta = seabirdsubroutines.seabird_subroutines.realdistance(currentposition[0],currentposition[1],previousposition[0],currentposition[1])
-    #zeta = seabirdsubroutines.seabird_subroutines.realdistance(currentposition[0],currentposition[1],currentposition[0],previousposition[1])
-    #dx = np.array([theta,zeta])
-    #speed = bird_speed + np.dot(dx,wind_vector)/sqrt(np.dot(dx,dx))
 
     #Treat bird as particle moving with overdamped Langevin dynamics
     migratingbird.position = migratingbird.position + force*dt
