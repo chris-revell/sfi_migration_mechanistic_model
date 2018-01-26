@@ -123,7 +123,7 @@ while t < t_max:
     #Calculate force
     force = np.asfortranarray(np.zeros((2),dtype='float32'))
     #Call fortran subroutine for resources component
-    seabirdsubroutines.seabird_subroutines.forcecalc(force,currentposition[0],currentposition[1],resources_filtered)#wind_merid_current,wind_zonal_current,resources_filtered,a)
+    seabirdsubroutines.seabird_subroutines.forcecalc(force,currentposition[0],currentposition[1],resources_filtered,earth)#wind_merid_current,wind_zonal_current,resources_filtered,a)
     #Calculate wind component
     currentwindlatticeposition = latlongtoxy(currentposition[0],currentposition[1])
     wind_merid_current = wind_merid[currentwindlatticeposition]

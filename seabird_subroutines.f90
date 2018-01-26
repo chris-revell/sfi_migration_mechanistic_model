@@ -5,11 +5,12 @@ MODULE SEABIRD_SUBROUTINES
 
 CONTAINS
 
-  subroutine forcecalc(force,currentlat,currentlon,resources_filtered)!wind_zonal_current,wind_merid_current,resources_filtered,a)
+  subroutine forcecalc(force,currentlat,currentlon,resources_filtered,earth)!wind_zonal_current,wind_merid_current,resources_filtered,a)
     integer*4                             :: i,j
     real*4,intent(in)                     :: currentlat,currentlon
   !  real*4,intent(in)                     :: a,wind_zonal_current,wind_merid_current
     real*4,intent(in),dimension(720,1440) :: resources_filtered
+    real*4,intent(in),dimension(720,1440) :: earth
     real*4,intent(inout),dimension(2)     :: force
     integer*4,dimension(2)                :: resources_shape
     real*4                                :: resourcelat,resourcelon,bearing,d_latlong,forcemagnitude,dist
@@ -22,14 +23,18 @@ CONTAINS
       do j=1,resources_shape(2)
         resourcelat = (resources_shape(1)/2.0-i-0.5)*d_latlong
         resourcelon = (j+0.5-resources_shape(2)/2.0)*d_latlong
-        bearing = initialbearing(currentlat,currentlon,resourcelat,resourcelon)
         dist = realdistance(resourcelat,resourcelon,currentlat,currentlon)
         if (dist.LT.0.00000001) then
           CYCLE
         else
-          forcemagnitude = resources_filtered(i,j)/dist
-          force(1) = force(1)+forcemagnitude*cos(bearing)
-          force(2) = force(2)+forcemagnitude*sin(bearing)
+          bearing = initialbearing(currentlat,currentlon,resourcelat,resourcelon)
+          !Resource force
+          forcemagnitude = resources_filtered(i,j)/(dist**2)
+          force(1) = force(1)+10.0*forcemagnitude*cos(bearing)
+          force(2) = force(2)+10.0*forcemagnitude*sin(bearing)
+          !Ground repulsion
+          force(1) = force(1)-10.0*earth(i,j)*cos(bearing)/(dist**3)
+          force(2) = force(2)-10.0*earth(i,j)*sin(bearing)/(dist**3)
         endif
       enddo
     enddo
