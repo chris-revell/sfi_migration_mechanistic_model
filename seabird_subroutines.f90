@@ -1,22 +1,20 @@
 ! Christopher Revell, University of Cambridge, 2016
 
-subroutine boltzmanncalc(boltzmann_factors,currenta,currentb,initiala,initialb,earth,wind_m,wind_z,resources_filtered,a,b,c,kT,t)
+subroutine boltzmanncalc(boltzmann_factors,currenta,currentb,destinationa,destinationb,elevation,earth,a,b,kT)
 
   integer*8                             :: i,j,k,l
   real*8,intent(inout),dimension(3,3)   :: boltzmann_factors
-  integer*8,intent(in)                  :: currenta,currentb,initiala,initialb
-  real*8,intent(in)                     :: a,b,c,kT,wind_m,wind_z,t
-  real*8,intent(in),dimension(720,1440) :: resources_filtered
+  real*8,intent(in),dimension(3,3)      :: elevation
+  integer*8,intent(in)                  :: currenta,currentb,destinationa,destinationb
+  real*8,intent(in)                     :: a,b,kT
   real*8,intent(in),dimension(720,1440) :: earth
-  integer*8,dimension(2)                :: resources_shape
+  integer*8,dimension(2)                :: earthshape
   integer*8,dimension(2)                :: state_index
-  real*8,dimension(2)                   :: wind_vector
-  integer*8,dimension(2)                :: displacement_vector
-  real*8                                :: state_potential,wind_magnitude,displacement_vector_magnitude,wind_mag_sq,disp_mag_sq
+  real*8                                :: state_potential
   real*8                                :: min_potential
   logical,dimension(3,3)                :: boltzmann_mask
 
-  resources_shape = (/720,1440/)
+  earthshape = (/720,1440/)
 
   boltzmann_mask(:,:) = .TRUE.
 
@@ -24,31 +22,19 @@ subroutine boltzmanncalc(boltzmann_factors,currenta,currentb,initiala,initialb,e
 
   do i=1,3
     do j=1,3
-      state_index = (/(currenta+i-2),MOD((currentb+j-2),resources_shape(2))/)
+      state_index = (/(currenta+i-2),MOD((currentb+j-2),earthshape(2))/)
       if (i.EQ.2.AND.j.EQ.2) then
           boltzmann_mask(i,j) = .FALSE.
-      elseif (earth(state_index(1),state_index(2)).EQ.1) then
-          boltzmann_mask(i,j) = .FALSE.
       else
-        state_potential = 0.0
-        do k=1,resources_shape(1)
-          do l=1,resources_shape(2)
-            if (earth(k,l).EQ.0.AND.resources_filtered(k,l).GT.0.AND.k.NE.state_index(1).AND.l.NE.state_index(2)) then
-              state_potential = state_potential + resources_filtered(k,l)/(realdistance(k,l,state_index(1),state_index(2)))
+        state_potential = elevation(state_index(1),state_index(2))
+        state_potential = state_potential + a*ABS(realdistance(currenta,currentb,destinationa,destinationb))
+        do k=1,earthshape(1)
+          do l=1,earthshape(2)
+            if (k.NE.state_index(1).AND.l.NE.state_index(2)) then
+              state_potential = state_potential + b*earth(k,l)/(realdistance(k,l,state_index(1),state_index(2)))
             endif
           enddo
         enddo
-        wind_vector = (/wind_m,wind_z/) !In form [y,x] for ease of translation to np arrays.
-        wind_mag_sq = DOT_PRODUCT(wind_vector,wind_vector)
-        wind_magnitude = SQRT(wind_mag_sq)
-        displacement_vector = (/i,j/)
-        disp_mag_sq = DOT_PRODUCT(displacement_vector,displacement_vector)
-        displacement_vector_magnitude = sqrt(disp_mag_sq)
-        state_potential=state_potential+a*wind_magnitude*DOT_PRODUCT(wind_vector,displacement_vector)/displacement_vector_magnitude
-
-        breeding_dist_dif = realdistance(initiala,initialb,state_index(1),state_index(2)) &
-                            - realdistance(initiala,initialb,currenta,currentb)
-        state_potential = state_potential - SIGN(1.0,breeding_dist_dif)*b*(ABS(breeding_dist_dif))**(t*c/8760.0)
         boltzmann_factors(i,j) = state_potential/kT
       endif
     enddo
@@ -62,7 +48,7 @@ subroutine boltzmanncalc(boltzmann_factors,currenta,currentb,initiala,initialb,e
         boltzmann_factors(i,j) = EXP(boltzmann_factors(i,j)-min_potential)
       else
         boltzmann_factors(i,j) = 0
-      endif         
+      endif
     enddo
   enddo
 
