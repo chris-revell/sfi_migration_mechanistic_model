@@ -1,5 +1,4 @@
 #!/Library/Frameworks/Python.framework/Versions/3.5/bin/python3
-
 # Christopher Revell, University of Cambridge, 2016
 
 from sys import argv,exit
@@ -17,13 +16,14 @@ initial_lon = float(argv[2])
 dest_lat    = float(argv[3])
 dest_lon    = float(argv[4])
 a           = float(argv[5]) # Relative contribution of potential components
-kT          = float(argv[6]) # Effective temperature of bird - high value increases randomness in path, lower value collapses to lowest energy state.
+b           = float(argv[6])
+kT          = float(argv[7]) # Effective temperature of bird - high value increases randomness in path, lower value collapses to lowest energy state.
 bird_speed  = 60
-b=1
+
 
 elevation = np.genfromtxt("input_data/elevation.txt")
 
-t_max=6*30*24   #Number of hours in months specified
+t_max=1000#6*30*24   #Number of hours in months specified
 
 """
 #Function to rotate list of datafiles to begin at start_month
@@ -121,15 +121,18 @@ while t < t_max:
     moved = 0
     for i in range(0,3):
         for j in range(0,3):
-            probability_sum = probability_sum + possible_state_boltzmann_factors[i,j]
-            if moved == 0:
-                if random_number < probability_sum:
-                    currentposition = (currentposition[0]+i-1,(currentposition[1]+j-1)%resources_shape[1]) # Use of mod % allows birds to move off one side of the grid and appear at the other. Ignore north and south poles for now because birds should never reach this point.
-                    moved = 1
+            if i ==1 and j ==1:
+                pass
+            else:
+                probability_sum = probability_sum + possible_state_boltzmann_factors[i,j]
+                if moved == 0:
+                    if random_number < probability_sum:
+                        currentposition = (currentposition[0]+i-1,(currentposition[1]+j-1)%resources_shape[1]) # Use of mod % allows birds to move off one side of the grid and appear at the other. Ignore north and south poles for now because birds should never reach this point.
+                        moved = 1
+                    else:
+                        pass
                 else:
                     pass
-            else:
-                pass
 
     """
     #Update time

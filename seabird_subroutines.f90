@@ -27,7 +27,7 @@ subroutine boltzmanncalc(boltzmann_factors,currenta,currentb,destinationa,destin
           boltzmann_mask(i,j) = .FALSE.
       else
         state_potential = elevation(state_index(1),state_index(2))
-        state_potential = state_potential + a*ABS(realdistance(currenta,currentb,destinationa,destinationb))
+        state_potential = state_potential - a*ABS(realdistance(currenta,currentb,destinationa,destinationb))/1000
         do k=1,earthshape(1)
           do l=1,earthshape(2)
             if (k.NE.state_index(1).AND.l.NE.state_index(2)) then
@@ -41,10 +41,10 @@ subroutine boltzmanncalc(boltzmann_factors,currenta,currentb,destinationa,destin
   enddo
 
   min_potential = MINVAL(boltzmann_factors,MASK=boltzmann_mask)
-
   do i=1,3
     do j=1,3
       if (boltzmann_mask(i,j)) then
+        print*, boltzmann_factors(i,j)-min_potential
         boltzmann_factors(i,j) = EXP(boltzmann_factors(i,j)-min_potential)
       else
         boltzmann_factors(i,j) = 0
