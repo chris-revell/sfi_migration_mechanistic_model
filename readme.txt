@@ -10,7 +10,7 @@ A bird is placed within the lattice and allowed to move to one of the eight surr
 This program is designed to be run in python3. Running in python2 will cause bugs. NumPy must be installed. In order to run the accompanying data processing scripts, Matplotlib and mpl_toolkits.basemap must also be installed.
 
 Before running the program for the first time, it is necessary to compile the Fortran subroutine. This requires f2py and is achieved by entering the following at the command line:
-f2py -c -m seabird_subroutines seabird_subroutines.f95
+python3 -m numpy.f2py -c seabird_subroutines.f90 -m seabird_subroutines --opt='-O3'
 
 Run the program by typing the following at the command line:
 

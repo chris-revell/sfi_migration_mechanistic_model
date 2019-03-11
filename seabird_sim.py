@@ -16,9 +16,9 @@ chloro_datafiles = [os.path.join("data_chloro",f) for f in os.listdir("data_chlo
 wind_merid_datafiles = [os.path.join("data_wind",f) for f in os.listdir("data_wind") if f[-4:].lower()==".txt" and "merid" in f]
 wind_zonal_datafiles = [os.path.join("data_wind",f) for f in os.listdir("data_wind") if f[-4:].lower()==".txt" and "zonal" in f]
 """
-chloro_datafiles = ["data_chloro/chloromean01.csv", "data_chloro/chloromean02.csv", "data_chloro/chloromean03.csv", "data_chloro/chloromean04.csv", "data_chloro/chloromean05.csv", "data_chloro/chloromean06.csv", "data_chloro/chloromean07.csv", "data_chloro/chloromean08.csv", "data_chloro/chloromean09.csv", "data_chloro/chloromean10.csv", "data_chloro/chloromean11.csv", "data_chloro/chloromean12.csv"]
-wind_merid_datafiles = ["data_wind/merid_mean01.txt", "data_wind/merid_mean02.txt", "data_wind/merid_mean03.txt", "data_wind/merid_mean04.txt", "data_wind/merid_mean05.txt", "data_wind/merid_mean06.txt", "data_wind/merid_mean07.txt", "data_wind/merid_mean08.txt", "data_wind/merid_mean09.txt", "data_wind/merid_mean10.txt", "data_wind/merid_mean11.txt", "data_wind/merid_mean12.txt"]
-wind_zonal_datafiles = ["data_wind/zonal_mean01.txt", "data_wind/zonal_mean02.txt", "data_wind/zonal_mean03.txt", "data_wind/zonal_mean04.txt", "data_wind/zonal_mean05.txt", "data_wind/zonal_mean06.txt", "data_wind/zonal_mean07.txt", "data_wind/zonal_mean08.txt", "data_wind/zonal_mean09.txt", "data_wind/zonal_mean10.txt", "data_wind/zonal_mean11.txt", "data_wind/zonal_mean12.txt"]
+chloro_datafiles = ["inputdata/data_chloro/chloromean01.csv", "inputdata/data_chloro/chloromean02.csv", "inputdata/data_chloro/chloromean03.csv", "inputdata/data_chloro/chloromean04.csv", "inputdata/data_chloro/chloromean05.csv", "inputdata/data_chloro/chloromean06.csv", "inputdata/data_chloro/chloromean07.csv", "inputdata/data_chloro/chloromean08.csv", "inputdata/data_chloro/chloromean09.csv", "inputdata/data_chloro/chloromean10.csv", "inputdata/data_chloro/chloromean11.csv", "inputdata/data_chloro/chloromean12.csv"]
+wind_merid_datafiles = ["inputdata/data_wind/merid_mean01.txt", "inputdata/data_wind/merid_mean02.txt", "inputdata/data_wind/merid_mean03.txt", "inputdata/data_wind/merid_mean04.txt", "inputdata/data_wind/merid_mean05.txt", "inputdata/data_wind/merid_mean06.txt", "inputdata/data_wind/merid_mean07.txt", "inputdata/data_wind/merid_mean08.txt", "inputdata/data_wind/merid_mean09.txt", "inputdata/data_wind/merid_mean10.txt", "inputdata/data_wind/merid_mean11.txt", "inputdata/data_wind/merid_mean12.txt"]
+wind_zonal_datafiles = ["inputdata/data_wind/zonal_mean01.txt", "inputdata/data_wind/zonal_mean02.txt", "inputdata/data_wind/zonal_mean03.txt", "inputdata/data_wind/zonal_mean04.txt", "inputdata/data_wind/zonal_mean05.txt", "inputdata/data_wind/zonal_mean06.txt", "inputdata/data_wind/zonal_mean07.txt", "inputdata/data_wind/zonal_mean08.txt", "inputdata/data_wind/zonal_mean09.txt", "inputdata/data_wind/zonal_mean10.txt", "inputdata/data_wind/zonal_mean11.txt", "inputdata/data_wind/zonal_mean12.txt"]
 
 #Initial conditions
 initial_lat = float(argv[1])
@@ -47,7 +47,7 @@ wind_merid_datafiles = rotate(wind_merid_datafiles,start_month)
 wind_zonal_datafiles = rotate(wind_zonal_datafiles,start_month)
 
 #Import earth map - earth[i,j]=1 for dry land, 0 for ocean. Used to restrict movement to ocean and mask chlorophyll from inland lakes.
-earth = np.asfortranarray(np.genfromtxt("earth.txt",delimiter=" "))
+earth = np.asfortranarray(np.genfromtxt("inputdata/earth.txt",delimiter=" "))
 resources_shape = np.shape(earth)
 
 d_latlong = 180/resources_shape[0] #Change in latitude and longitude angle per lattice point.
