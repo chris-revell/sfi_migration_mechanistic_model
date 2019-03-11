@@ -3,3 +3,7 @@
 *.o
 *.Rapp.history
 output_data/*
+data_wind/*
+data_chloro/*
+earth.txt
+*.zip
